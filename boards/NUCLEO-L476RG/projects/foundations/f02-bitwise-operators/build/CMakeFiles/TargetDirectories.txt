@@ -1,3 +1,0 @@
-/home/mwhite/Projects/white-iron-labs/boards/NUCLEO-L476RG/projects/foundations/f02-bitwise-operators/build/CMakeFiles/main.dir
-/home/mwhite/Projects/white-iron-labs/boards/NUCLEO-L476RG/projects/foundations/f02-bitwise-operators/build/CMakeFiles/edit_cache.dir
-/home/mwhite/Projects/white-iron-labs/boards/NUCLEO-L476RG/projects/foundations/f02-bitwise-operators/build/CMakeFiles/rebuild_cache.dir
