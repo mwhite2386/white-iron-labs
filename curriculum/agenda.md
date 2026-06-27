@@ -57,27 +57,27 @@ Break projects (`BP-NN`) slot in after each tier. Device is provided by you; we 
 > No hardware needed. Exercises compile and run on Linux. Focus: the C features that separate bare metal from application programming.
 
 ### F01 — Binary, Hex & Number Representation
-- [ ] Binary, decimal, hex conversions by hand and in C
-- [ ] Two's complement (how negative numbers work in a register)
-- [ ] Why peripheral addresses are always written in hex (`0x48000000`)
-- [ ] `0b` binary literals, `0x` hex literals, digit grouping
-- **Exercise:** Convert a set of addresses from the RM035 memory map table to binary; identify which bits are set
+- [x] Binary, decimal, hex conversions by hand and in C
+- [x] Two's complement (how negative numbers work in a register)
+- [x] Why peripheral addresses are always written in hex (`0x48000000`)
+- [x] `0b` binary literals, `0x` hex literals, digit grouping
+- **Exercise:** Convert a set of addresses from the RM035 memory map table to binary; identify which bits are set ✓ (TIM2, RTC, UART5)
 
 ### F02 — Bitwise Operators
-- [ ] `&` (AND), `|` (OR), `^` (XOR), `~` (NOT/complement)
-- [ ] `<<` (left shift), `>>` (right shift)
-- [ ] Operator precedence — why parentheses matter
-- [ ] Common mistakes: signed vs unsigned shifts, shifting past width
-- **Exercise:** Write a program that demonstrates each operator on known values and prints the results in hex
+- [x] `&` (AND), `|` (OR), `^` (XOR), `~` (NOT/complement)
+- [x] `<<` (left shift), `>>` (right shift)
+- [x] Operator precedence — why parentheses matter
+- [x] Common mistakes: signed vs unsigned shifts, shifting past width
+- **Exercise:** Write a program that demonstrates each operator on known values and prints the results in hex ✓
 
 ### F03 — Bit Manipulation Patterns
-- [ ] **Set a bit:** `reg |= (1U << n)`
-- [ ] **Clear a bit:** `reg &= ~(1U << n)`
-- [ ] **Toggle a bit:** `reg ^= (1U << n)`
-- [ ] **Test a bit:** `if (reg & (1U << n))`
-- [ ] Multi-bit masks: setting/clearing a field (e.g. MODER[1:0])
-- [ ] The `1U` vs `1` distinction and why it matters at bit 31
-- **Exercise:** Simulate a register byte; apply each pattern and verify the result
+- [x] **Set a bit:** `reg |= (1U << n)`
+- [x] **Clear a bit:** `reg &= ~(1U << n)`
+- [x] **Toggle a bit:** `reg ^= (1U << n)`
+- [x] **Test a bit:** `if ((reg & (1U << n)) == 0)`
+- [x] Multi-bit masks: setting/clearing a field (e.g. MODER[1:0])
+- [x] The `1U` vs `1` distinction and why it matters at bit 31
+- **Exercise:** Simulate a register byte; apply each pattern and verify the result — 🔄 in progress
 
 ### F04 — Fixed-Width Integers
 - [ ] Why `int` size varies by architecture (16/32/64-bit)
@@ -417,9 +417,9 @@ Mark chapters complete by checking off the checklist items above, then updating 
 
 | Chapter | Status | Date Completed | Notes |
 |---------|--------|---------------|-------|
-| F01 | ⬜ Not started | — | |
-| F02 | ⬜ Not started | — | |
-| F03 | ⬜ Not started | — | |
+| F01 | ✅ Complete | 2026-06-25 | |
+| F02 | ✅ Complete | 2026-06-26 | |
+| F03 | 🔄 In progress | — | exercise remaining |
 | F04 | ⬜ Not started | — | |
 | F05 | ⬜ Not started | — | |
 | F06 | ⬜ Not started | — | |
