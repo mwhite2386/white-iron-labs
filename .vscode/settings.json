@@ -1,0 +1,5 @@
+{
+    "cmake.sourceDirectory": "${workspaceFolder}/NUCLEO-L476RG/foundations/f03-bit-manipulation",
+    "cmake.buildDirectory": "${sourceDirectory}/build",
+    "C_Cpp.default.compileCommands": "${workspaceFolder}/NUCLEO-L476RG/foundations/f03-bit-manipulation/build/compile_commands.json"
+}

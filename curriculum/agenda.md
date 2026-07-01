@@ -419,7 +419,7 @@ Mark chapters complete by checking off the checklist items above, then updating 
 |---------|--------|---------------|-------|
 | F01 | ✅ Complete | 2026-06-25 | |
 | F02 | ✅ Complete | 2026-06-26 | |
-| F03 | 🔄 In progress | — | exercise remaining |
+| F03 | ✅ Complete | 2026-06-26 | |
 | F04 | ⬜ Not started | — | |
 | F05 | ⬜ Not started | — | |
 | F06 | ⬜ Not started | — | |
