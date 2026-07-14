@@ -77,47 +77,47 @@ Break projects (`BP-NN`) slot in after each tier. Device is provided by you; we 
 - [x] **Test a bit:** `if ((reg & (1U << n)) == 0)`
 - [x] Multi-bit masks: setting/clearing a field (e.g. MODER[1:0])
 - [x] The `1U` vs `1` distinction and why it matters at bit 31
-- **Exercise:** Simulate a register byte; apply each pattern and verify the result — 🔄 in progress
+- **Exercise:** Simulate a register byte; apply each pattern and verify the result ✓
 
 ### F04 — Fixed-Width Integers
-- [ ] Why `int` size varies by architecture (16/32/64-bit)
-- [ ] `uint8_t`, `uint16_t`, `uint32_t`, `uint64_t` from `<stdint.h>`
-- [ ] `int8_t`, `int16_t`, `int32_t` (signed)
-- [ ] The `U` suffix: `0x48000000UL` vs `0x48000000`
-- [ ] `SIZE_MAX`, `UINT32_MAX` sentinels
-- **Exercise:** Declare registers as `volatile uint32_t`; observe what happens with plain `int` in a bit-shift edge case
+- [x] Why `int` size varies by architecture (16/32/64-bit)
+- [x] `uint8_t`, `uint16_t`, `uint32_t`, `uint64_t` from `<stdint.h>`
+- [x] `int8_t`, `int16_t`, `int32_t` (signed)
+- [x] The `U` suffix: `0x48000000UL` vs `0x48000000`
+- [x] `SIZE_MAX`, `UINT32_MAX` sentinels
+- **Exercise:** Declare registers as `volatile uint32_t`; observe what happens with plain `int` in a bit-shift edge case ✓
 
 ### F05 — The `volatile` Keyword
-- [ ] What the C compiler optimizer assumes about memory
-- [ ] Why hardware registers get cached in a CPU register without `volatile`
-- [ ] The infinite loop problem: polling a register without `volatile`
-- [ ] `volatile` in ISR-shared variables
-- [ ] What `volatile` does NOT protect against (not a synchronization primitive)
-- **Exercise:** Write a polling loop; compile with `-O2`; inspect the assembly with and without `volatile`
+- [x] What the C compiler optimizer assumes about memory
+- [x] Why hardware registers get cached in a CPU register without `volatile`
+- [x] The infinite loop problem: polling a register without `volatile`
+- [x] `volatile` in ISR-shared variables
+- [x] What `volatile` does NOT protect against (not a synchronization primitive)
+- **Exercise:** Write a polling loop; compile with `-O2`; inspect the assembly with and without `volatile` ✓
 
 ### F06 — Pointers & Memory Addresses
-- [ ] Pointer basics review: `*`, `&`, pointer arithmetic
-- [ ] Casting an integer to a pointer: `(uint32_t *)0x48000000UL`
-- [ ] Adding `volatile`: `(volatile uint32_t *)0x48000000UL`
-- [ ] Dereferencing to read/write: `*ptr = value`, `value = *ptr`
+- [x] Pointer basics review: `*`, `&`, pointer arithmetic
+- [x] Casting an integer to a pointer: `(uint32_t *)0x48000000UL`
+- [x] Adding `volatile`: `(volatile uint32_t *)0x48000000UL`
+- [x] Dereferencing to read/write: `*ptr = value`, `value = *ptr`
 - [ ] The complete bare metal register access pattern
-- **Exercise:** Write a function `reg_write(uint32_t addr, uint32_t val)` and `reg_read(uint32_t addr)` using volatile pointer casts
+- **Exercise:** Write a function `reg_write(uint32_t addr, uint32_t val)` and `reg_read(uint32_t addr)` using volatile pointer casts — ⏭ skipped, not attempted
 
 ### F07 — Macros for Register Access
-- [ ] Object-like `#define` for base addresses and offsets
+- [x] Object-like `#define` for base addresses and offsets
 - [ ] Function-like macros with parameters
 - [ ] Building `SET_BIT(reg, bit)`, `CLEAR_BIT(reg, bit)`, `READ_BIT(reg, bit)`, `MODIFY_REG(reg, mask, val)`
 - [ ] Why CMSIS uses these exact macros (we're building the same thing)
-- [ ] Macro pitfalls: missing parentheses, double evaluation
-- **Exercise:** Implement the four macros; write a test harness that verifies each against known values
+- [x] Macro pitfalls: missing parentheses, double evaluation
+- **Exercise:** Implement the four macros; write a test harness that verifies each against known values — ⏭ skipped, not attempted
 
 ### F08 — Reading Component & Module Markings
-- [ ] IC chip markings: manufacturer prefix, part number, package, date code, country
-- [ ] Module silkscreen: `1.28" TFT VER1.0 240×240 IC:GC9A01` → GC9A01 is the display controller IC
-- [ ] Package types: DIP, SOIC, TQFP, QFN, BGA, SOT-23 — how to identify from footprint
-- [ ] Resistor color codes, capacitor markings (EIA codes)
-- [ ] How to identify the communication interface from module markings (SPI/I2C/UART/parallel pins)
-- **Exercise:** Given three mystery module photos, identify the driver IC and communication interface
+- [x] IC chip markings: manufacturer prefix, part number, package, date code, country
+- [x] Module silkscreen: `1.28" TFT VER1.0 240×240 IC:GC9A01` → GC9A01 is the display controller IC
+- [x] Package types: DIP, SOIC, TQFP, QFN, BGA, SOT-23 — how to identify from footprint
+- [x] Resistor color codes, capacitor markings (EIA codes) — self-reported prior knowledge, not walked through together
+- [x] How to identify the communication interface from module markings (SPI/I2C/UART/parallel pins)
+- **Exercise:** Given three mystery module photos, identify the driver IC and communication interface — ✓ done on real GC9A01 module: driver IC = GC9A01, interface = SPI (4-wire), pins `RST, CS, DC, SDA, SCL, GND, VCC` (SDA/SCL labels are holdovers, actually MOSI/SCK), no BLK pin (backlight hardwired on)
 
 ### F09 — Finding & Reading External Device Datasheets
 - [ ] How to find a datasheet: part number → manufacturer site → datasheet aggregators
@@ -127,7 +127,7 @@ Break projects (`BP-NN`) slot in after each tier. Device is provided by you; we 
 - [ ] Communication protocol section: SPI/I2C timing diagrams
 - [ ] Initialization sequence tables: register writes in order
 - [ ] How this maps to what we do in break projects
-- **Exercise:** Find the GC9A01 datasheet; locate the SPI timing section and initialization register sequence
+- [x] **Exercise:** Find the GC9A01 datasheet; locate the SPI timing section and initialization register sequence ✓ Found GC9A01A datasheet (Galaxycore), placed in `break-projects/bp01-gc9a01-display/docs/`; located 4-wire serial timing diagram (p.190) and command list (§6)
 
 ---
 
@@ -140,28 +140,28 @@ Break projects (`BP-NN`) slot in after each tier. Device is provided by you; we 
 > All register addresses derived by hand from RM035. No ST or CMSIS headers.
 
 ### E01 — Toolchain & CMake Setup
-- [ ] Install arm-none-eabi-gcc, cmake, ninja, openocd
-- [ ] Write `cmake/arm-none-eabi.cmake` toolchain file (shared, board-agnostic)
-- [ ] Write `boards/NUCLEO-L476RG/cmake/stm32l476rg.cmake` (MCU flags: `-mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard`)
-- [ ] Write a minimal CMakeLists.txt for a chapter project
-- [ ] Flash a pre-built `.bin` with OpenOCD to verify the chain works
-- **Verify:** ST-LINK connects; OpenOCD flashes without error
+- [x] Install arm-none-eabi-gcc, cmake, ninja, openocd
+- [x] Write `cmake/arm-none-eabi.cmake` toolchain file — placed at `NUCLEO-L476RG/cmake/` instead (board-only structure, not shared across boards)
+- [x] Write `NUCLEO-L476RG/cmake/stm32l476rg.cmake` (MCU flags: `-mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard`)
+- [x] Write a minimal CMakeLists.txt for a chapter project (`entry/e01-toolchain-setup/`) — configure-only, no link (no startup/linker script until E04)
+- [ ] Flash a pre-built `.bin` with OpenOCD to verify the chain works — ⏭ deferred, no .bin available yet; used `openocd -f board/st_nucleo_l4.cfg` connect-only check instead
+- **Verify:** ST-LINK connects ✓; OpenOCD flashes without error — pending real .bin (E04)
 
 ### E02 — How to Read the Reference Manual
-- [ ] RM035 §1: document conventions, register notation (`Res.`, `rw`, `r`, `w`)
-- [ ] Memory map table (RM035 §2.2): how to read base address + offset
-- [ ] Register description layout: bit position, name, reset value, access type, description
-- [ ] Difference between RM035, datasheet, DUI0553, and UM1724
-- [ ] How to search a 1400-page PDF efficiently
-- **Exercise:** Locate the GPIOA base address and the MODER register offset; derive the full address manually
+- [x] RM035 §1: document conventions, register notation (`Res.`, `rw`, `r`, `w`, plus `rs`, `rwo`)
+- [x] Memory map table (RM035 §2.2): how to read base address + offset
+- [x] Register description layout: bit position, name, reset value, access type, description
+- [x] Difference between RM035, datasheet, DUI0553, and UM1724
+- [x] How to search a 1400-page PDF efficiently
+- **Exercise:** Locate the GPIOA base address and the MODER register offset; derive the full address manually ✓ GPIOA base `0x48000000` (AHB2), MODER offset `0x00`, full address `0x48000000`
 
 ### E03 — Memory Map from Scratch
-- [ ] Code Flash: `0x0800 0000` – `0x080F FFFF` (1 MB)
-- [ ] SRAM1/SRAM2 addresses
-- [ ] Peripheral bus addresses: AHB1, AHB2, APB1, APB2
-- [ ] Writing a minimal `registers.h` with only base address `#define`s
-- [ ] Volatile pointer casting in context (links back to F06)
-- **Exercise:** Open RM035 §2.2; write `#define`s for GPIOA, GPIOB, RCC, USART2 base addresses by reading the table
+- [x] Code Flash: `0x0800 0000` – `0x080F FFFF` (1 MB)
+- [x] SRAM1/SRAM2 addresses
+- [x] Peripheral bus addresses: AHB1, AHB2, APB1, APB2
+- [x] Writing a minimal `registers.h` with only base address `#define`s
+- [x] Volatile pointer casting in context (links back to F06)
+- **Exercise:** Open RM035 §2.2; write `#define`s for GPIOA, GPIOB, RCC, USART2 base addresses by reading the table ✓ done in `entry/e03-memory-map/registers.h`; also closed the F06 volatile-cast exercise gap in `main.c`
 
 ### E04 — Startup Code & Linker Script
 - [ ] ARM Cortex-M reset sequence (DUI0553 §2.3): what happens at power-on
@@ -420,16 +420,16 @@ Mark chapters complete by checking off the checklist items above, then updating 
 | F01 | ✅ Complete | 2026-06-25 | |
 | F02 | ✅ Complete | 2026-06-26 | |
 | F03 | ✅ Complete | 2026-06-26 | |
-| F04 | ⬜ Not started | — | |
-| F05 | ⬜ Not started | — | |
-| F06 | ⬜ Not started | — | |
-| F07 | ⬜ Not started | — | |
-| F08 | ⬜ Not started | — | |
-| F09 | ⬜ Not started | — | |
-| BP-01 | ⬜ Not started | — | Device: TBD |
-| E01 | ⬜ Not started | — | |
-| E02 | ⬜ Not started | — | |
-| E03 | ⬜ Not started | — | |
+| F04 | ✅ Complete | 2026-07-03 | |
+| F05 | ✅ Complete | 2026-07-10 | |
+| F06 | 🔶 Partial | 2026-07-10 | Concepts covered; reg_write/reg_read exercise skipped |
+| F07 | 🔶 Partial | 2026-07-11 | Object-like #define + parens pitfall covered; function-like macros (SET_BIT etc.) and exercise skipped |
+| F08 | ✅ Complete | 2026-07-11 | Chip marking decode, package types, module silkscreen decode, resistor/cap EIA codes (self-reported), comm-interface pin ID all covered; exercise done on real GC9A01 module (SPI, 7 pins, no BLK) |
+| F09 | ✅ Complete | 2026-07-11 | Datasheet found (GC9A01A, Galaxycore) and saved to bp01 project folder; located timing + command sections |
+| BP-01 | ⏸ Paused | 2026-07-11 | Device: GC9A01 display. Datasheet found and saved; paused before wiring/driver work — overwhelmed by hardware terminology, resuming after Entry tier |
+| E01 | ✅ Complete | 2026-07-12 | Toolchain verified: arm-none-eabi-gcc (STM32Cube bundle), cmake, ninja, openocd installed. Toolchain files at NUCLEO-L476RG/cmake/ (arm-none-eabi.cmake generic, stm32l476rg.cmake board-specific; C++ compiler found but flags left out for now). Configure test passed in entry/e01-toolchain-setup/. OpenOCD + ST-LINK connectivity confirmed (Cortex-M4 detected); actual .bin flash deferred to E04 once real firmware exists |
+| E02 | ✅ Complete | 2026-07-12 | Register notation (rw/r/w/Res./rs/rwo), memory map base+offset, doc differentiation (RM035/datasheet/DUI0553/UM1724), PDF search tip all covered; exercise done: derived GPIOA_MODER = 0x48000000 + 0x00 = 0x48000000 |
+| E03 | ✅ Complete | 2026-07-13 | Flash/SRAM1/SRAM2 addresses, AHB1/AHB2/APB1/APB2 base addresses (with Reserved-vs-real-peripheral distinction on AHB2), registers.h with base #defines, volatile pointer cast in main.c (closed F06 exercise gap) |
 | E04 | ⬜ Not started | — | |
 | E05 | ⬜ Not started | — | |
 | E06 | ⬜ Not started | — | |

@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bare Metal C — Cheat Sheet</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --accent-dim: #1f3a5f;
+    --green: #3fb950;
+    --yellow: #d29922;
+    --red: #f85149;
+    --code-bg: #1c2128;
+    --nav-width: 220px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* ── Layout ── */
+  .layout {
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* ── Sidebar ── */
+  nav {
+    width: var(--nav-width);
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 24px 0;
+  }
+
+  nav h2 {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 0 16px 12px;
+  }
+
+  nav a {
+    display: block;
+    padding: 6px 16px;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 13px;
+    border-left: 2px solid transparent;
+    transition: color .15s, border-color .15s, background .15s;
+  }
+
+  nav a:hover { color: var(--text); background: rgba(255,255,255,.04); }
+
+  nav a.active {
+    color: var(--accent);
+    border-left-color: var(--accent);
+    background: rgba(88,166,255,.07);
+  }
+
+  /* ── Main content ── */
+  main {
+    flex: 1;
+    max-width: 860px;
+    padding: 48px 40px;
+    overflow: hidden;
+  }
+
+  main > h1 {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 13px;
+    margin-bottom: 48px;
+  }
+
+  /* ── Sections ── */
+  section {
+    margin-bottom: 56px;
+    scroll-margin-top: 24px;
+  }
+
+  section h2 {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text);
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  section h2 .icon {
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  section h2 .toggle {
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--muted);
+    transition: transform .2s;
+  }
+
+  section h2.collapsed .toggle { transform: rotate(-90deg); }
+
+  .section-body { overflow: hidden; }
+
+  h3 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin: 24px 0 10px;
+  }
+
+  p { margin-bottom: 12px; color: var(--text); }
+
+  /* ── Tables ── */
+  .table-wrap { overflow-x: auto; margin-bottom: 16px; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+
+  th {
+    background: var(--surface);
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    padding: 8px 12px;
+    text-align: left;
+    border: 1px solid var(--border);
+  }
+
+  td {
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  tr:nth-child(even) td { background: rgba(255,255,255,.025); }
+
+  /* ── Code blocks ── */
+  .code-wrap {
+    position: relative;
+    margin: 12px 0 16px;
+  }
+
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 16px;
+    overflow-x: auto;
+    font-family: "SF Mono", "Fira Code", "Cascadia Code", monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    color: #cdd9e5;
+  }
+
+  code {
+    font-family: "SF Mono", "Fira Code", "Cascadia Code", monospace;
+    font-size: 12.5px;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 1px 5px;
+    color: #cdd9e5;
+  }
+
+  pre code { background: none; border: none; padding: 0; font-size: inherit; }
+
+  .copy-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: color .15s, background .15s;
+    font-family: inherit;
+  }
+
+  .copy-btn:hover { color: var(--text); background: var(--border); }
+  .copy-btn.copied { color: var(--green); border-color: var(--green); }
+
+  /* ── Callout boxes ── */
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: rgba(88,166,255,.07);
+    padding: 10px 14px;
+    border-radius: 0 6px 6px 0;
+    font-size: 13.5px;
+    margin: 12px 0 16px;
+  }
+
+  .callout.warn {
+    border-left-color: var(--yellow);
+    background: rgba(210,153,34,.07);
+  }
+
+  strong { color: var(--text); }
+
+  /* ── Number Converter Widget ── */
+  .converter {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    margin: 16px 0;
+  }
+
+  .converter h4 {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin-bottom: 14px;
+  }
+
+  .converter-grid {
+    display: grid;
+    grid-template-columns: 90px 1fr;
+    gap: 8px 12px;
+    align-items: center;
+  }
+
+  .converter label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+  }
+
+  .converter input {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: "SF Mono", "Fira Code", monospace;
+    font-size: 14px;
+    padding: 6px 10px;
+    border-radius: 5px;
+    width: 100%;
+    outline: none;
+    transition: border-color .15s;
+  }
+
+  .converter input:focus { border-color: var(--accent); }
+  .converter input.error { border-color: var(--red); }
+
+  .converter-note {
+    margin-top: 12px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  /* ── 8-bit Visualizer ── */
+  .bit-viz {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    margin: 16px 0;
+  }
+
+  .bit-viz h4 {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin-bottom: 16px;
+  }
+
+  .bits-row {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    margin-bottom: 6px;
+  }
+
+  .bit {
+    width: 40px;
+    height: 40px;
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "SF Mono", monospace;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .15s, border-color .15s, color .15s;
+    color: var(--muted);
+    background: var(--bg);
+    user-select: none;
+  }
+
+  .bit.on {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .bit.msb.on {
+    background: rgba(248,81,73,.12);
+    border-color: var(--red);
+    color: var(--red);
+  }
+
+  .bit-labels {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    margin-bottom: 14px;
+  }
+
+  .bit-label {
+    width: 40px;
+    text-align: center;
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  .viz-results {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin-top: 8px;
+  }
+
+  .viz-result {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    text-align: center;
+  }
+
+  .viz-result .vr-label {
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin-bottom: 4px;
+  }
+
+  .viz-result .vr-value {
+    font-family: "SF Mono", monospace;
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .vr-unsigned { color: var(--green); }
+  .vr-signed   { color: var(--yellow); }
+  .vr-hex      { color: var(--accent); }
+
+  .viz-hint {
+    font-size: 12px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 10px;
+  }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- ── Sidebar nav ── -->
+  <nav id="sidebar">
+    <h2>Contents</h2>
+    <a href="#numbers" class="nav-link">Number Systems</a>
+    <a href="#signed" class="nav-link">Signed vs Unsigned</a>
+    <a href="#bitwise" class="nav-link">Bitwise Operators</a>
+    <a href="#patterns" class="nav-link">Bit Manipulation</a>
+  </nav>
+
+  <!-- ── Main ── -->
+  <main>
+    <h1>Bare Metal C</h1>
+    <p class="subtitle">Cheat sheet — click section headers to collapse &nbsp;·&nbsp; click bits to toggle</p>
+
+    <!-- ══ Number Systems ══ -->
+    <section id="numbers">
+      <h2 onclick="toggleSection(this)">
+        <span class="icon">⬡</span> Number Systems
+        <span class="toggle">▾</span>
+      </h2>
+      <div class="section-body">
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Base</th><th>Name</th><th>Digits</th><th>C Prefix</th><th>Example</th></tr></thead>
+            <tbody>
+              <tr><td>2</td><td>Binary</td><td>0, 1</td><td><code>0b</code></td><td><code>0b00001111</code></td></tr>
+              <tr><td>10</td><td>Decimal</td><td>0–9</td><td><em style="color:var(--muted)">(none)</em></td><td><code>15</code></td></tr>
+              <tr><td>16</td><td>Hex</td><td>0–9, A–F</td><td><code>0x</code></td><td><code>0x0F</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout">
+          <strong>1 hex digit = exactly 4 bits (a "nibble")</strong><br>
+          So a 32-bit value always takes exactly 8 hex digits. This is why peripheral addresses are written in hex — you can see the bit groupings at a glance.
+        </div>
+
+        <div class="code-wrap">
+          <button class="copy-btn" onclick="copyCode(this)">copy</button>
+          <pre><code>0x 4800 0000
+   ^^^^ ^^^^
+   8 hex digits = 32 bits</code></pre>
+        </div>
+
+        <!-- Live Converter -->
+        <div class="converter">
+          <h4>Live Base Converter</h4>
+          <div class="converter-grid">
+            <label>Binary</label>
+            <input id="conv-bin" type="text" placeholder="e.g. 00001111" oninput="convertFrom('bin')" spellcheck="false">
+            <label>Decimal</label>
+            <input id="conv-dec" type="text" placeholder="e.g. 15" oninput="convertFrom('dec')" spellcheck="false">
+            <label>Hex</label>
+            <input id="conv-hex" type="text" placeholder="e.g. 0F" oninput="convertFrom('hex')" spellcheck="false">
+          </div>
+          <p class="converter-note">Type any value — the other fields update automatically.</p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ══ Signed vs Unsigned ══ -->
+    <section id="signed">
+      <h2 onclick="toggleSection(this)">
+        <span class="icon">±</span> Signed vs Unsigned — Two's Complement
+        <span class="toggle">▾</span>
+      </h2>
+      <div class="section-body">
+
+        <p>Same bit pattern, different interpretation depending on the type.</p>
+
+        <!-- Interactive 8-bit visualizer -->
+        <div class="bit-viz">
+          <h4>Interactive 8-bit Visualizer — click bits to toggle</h4>
+          <div class="bits-row" id="bit-row">
+            <!-- bits 7..0 rendered by JS -->
+          </div>
+          <div class="bit-labels" id="bit-label-row"></div>
+          <div class="viz-results">
+            <div class="viz-result">
+              <div class="vr-label">Unsigned (uint8_t)</div>
+              <div class="vr-value vr-unsigned" id="viz-unsigned">0</div>
+            </div>
+            <div class="viz-result">
+              <div class="vr-label">Signed (int8_t)</div>
+              <div class="vr-value vr-signed" id="viz-signed">0</div>
+            </div>
+            <div class="viz-result">
+              <div class="vr-label">Hex</div>
+              <div class="vr-value vr-hex" id="viz-hex">0x00</div>
+            </div>
+          </div>
+          <p class="viz-hint">Red bit = sign bit (MSB). Toggle it to see two's complement flip.</p>
+        </div>
+
+        <h3>8-bit reference table</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Bit pattern</th><th>Unsigned (uint8_t)</th><th>Signed (int8_t)</th></tr></thead>
+            <tbody>
+              <tr><td><code>00000000</code></td><td>0</td><td>0</td></tr>
+              <tr><td><code>01111111</code></td><td>127</td><td>127</td></tr>
+              <tr><td><code>10000000</code></td><td>128</td><td>−128</td></tr>
+              <tr><td><code>11111111</code></td><td>255</td><td>−1</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Ranges</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Type</th><th>Min</th><th>Max</th></tr></thead>
+            <tbody>
+              <tr><td><code>uint8_t</code></td><td>0</td><td>255</td></tr>
+              <tr><td><code>int8_t</code></td><td>−128</td><td>127</td></tr>
+              <tr><td><code>uint32_t</code></td><td>0</td><td>4,294,967,295</td></tr>
+              <tr><td><code>int32_t</code></td><td>−2,147,483,648</td><td>2,147,483,647</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>The trick: −1 is all ones</h3>
+        <p>In two's complement, <code>-1</code> is always all bits set — regardless of width:</p>
+        <div class="code-wrap">
+          <button class="copy-btn" onclick="copyCode(this)">copy</button>
+          <pre><code>// -1 in each width:
+ 8-bit:  11111111
+16-bit:  1111111111111111
+32-bit:  11111111111111111111111111111111</code></pre>
+        </div>
+
+        <h3>Why it matters in embedded</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Use case</th><th>Type</th><th>Why</th></tr></thead>
+            <tbody>
+              <tr><td>Register addresses</td><td><code>uint32_t</code></td><td>No negatives; hardware addresses are always positive</td></tr>
+              <tr><td>Control/status bits</td><td>unsigned</td><td>Bit fields, not magnitudes</td></tr>
+              <tr><td>Sensor data (ADC, temperature)</td><td><code>int32_t</code></td><td>Value may be negative</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout warn">
+          Declaring a signed-encoded register value as <code>uint32_t</code> gives you the wrong number. The hardware doesn't care — it stores bits. Your C type determines the interpretation.
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ══ Bitwise Operators ══ -->
+    <section id="bitwise">
+      <h2 onclick="toggleSection(this)">
+        <span class="icon">&amp;</span> Bitwise Operators
+        <span class="toggle">▾</span>
+      </h2>
+      <div class="section-body">
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Operator</th><th>Symbol</th><th>Result is 1 when…</th><th>Example</th></tr></thead>
+            <tbody>
+              <tr><td>AND</td><td><code>&amp;</code></td><td><strong>both</strong> bits are 1</td><td><code>0b1100 &amp; 0b1010 = 0b1000</code></td></tr>
+              <tr><td>OR</td><td><code>|</code></td><td><strong>either</strong> bit is 1</td><td><code>0b1100 | 0b1010 = 0b1110</code></td></tr>
+              <tr><td>XOR</td><td><code>^</code></td><td>bits are <strong>different</strong></td><td><code>0b1100 ^ 0b1010 = 0b0110</code></td></tr>
+              <tr><td>NOT</td><td><code>~</code></td><td><em style="color:var(--muted)">(flips every bit)</em></td><td><code>~0b00001100 = 0b11110011</code></td></tr>
+              <tr><td>Left shift</td><td><code>&lt;&lt;</code></td><td><em style="color:var(--muted)">(moves bits left, fills 0s right)</em></td><td><code>0b00000001 &lt;&lt; 3 = 0b00001000</code></td></tr>
+              <tr><td>Right shift</td><td><code>&gt;&gt;</code></td><td><em style="color:var(--muted)">(moves bits right, fills 0s left)</em></td><td><code>0b00010000 &gt;&gt; 2 = 0b00000100</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Key facts</h3>
+        <ul style="padding-left:20px; color:var(--text); line-height:2">
+          <li><code>&lt;&lt; n</code> is equivalent to multiplying by 2ⁿ</li>
+          <li><code>&gt;&gt; n</code> is equivalent to dividing by 2ⁿ (unsigned)</li>
+          <li><code>1U &lt;&lt; n</code> puts a single <code>1</code> at bit position <code>n</code> — used constantly for bit masks</li>
+        </ul>
+
+        <h3>Precedence — always use parentheses</h3>
+        <p>Bitwise operators have lower precedence than <code>==</code>. This is a silent bug:</p>
+        <div class="code-wrap">
+          <button class="copy-btn" onclick="copyCode(this)">copy</button>
+          <pre><code>if (reg &amp; 0x01 == 1)    // WRONG: evaluates as reg &amp; (0x01 == 1)
+if ((reg &amp; 0x01) == 1)  // CORRECT: AND happens first</code></pre>
+        </div>
+
+        <div class="callout warn">
+          When in doubt, parenthesize your bitwise operations.
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ══ Bit Manipulation Patterns ══ -->
+    <section id="patterns">
+      <h2 onclick="toggleSection(this)">
+        <span class="icon">⚙</span> Bit Manipulation Patterns
+        <span class="toggle">▾</span>
+      </h2>
+      <div class="section-body">
+
+        <p>These four patterns are used in every bare metal peripheral driver.</p>
+
+        <h3>Single-bit operations</h3>
+        <div class="code-wrap">
+          <button class="copy-btn" onclick="copyCode(this)">copy</button>
+          <pre><code>reg |= (1U &lt;&lt; n);              // SET bit n
+reg &amp;= ~(1U &lt;&lt; n);             // CLEAR bit n
+reg ^= (1U &lt;&lt; n);              // TOGGLE bit n
+if ((reg &amp; (1U &lt;&lt; n)) == 0)    // TEST if bit n is clear
+if ((reg &amp; (1U &lt;&lt; n)) != 0)    // TEST if bit n is set</code></pre>
+        </div>
+
+        <h3>Multi-bit field (e.g. a 2-bit field at bits 3:2)</h3>
+        <div class="code-wrap">
+          <button class="copy-btn" onclick="copyCode(this)">copy</button>
+          <pre><code>reg &amp;= ~((1U &lt;&lt; 3) | (1U &lt;&lt; 2));   // clear the field
+reg |= (value &lt;&lt; 2);                // write new value into field position</code></pre>
+        </div>
+        <p>Or combined into one line:</p>
+        <div class="code-wrap">
+          <button class="copy-btn" onclick="copyCode(this)">copy</button>
+          <pre><code>reg = (reg &amp; ~(0x3U &lt;&lt; 2)) | (value &lt;&lt; 2);</code></pre>
+        </div>
+
+        <h3>Why <code>1U</code> not <code>1</code></h3>
+        <div class="callout">
+          <code>1</code> is a signed <code>int</code>. Shifting it into bit 31 is <strong>undefined behavior</strong> in C. <code>1U</code> is unsigned — no sign bit, no UB. Always use <code>1U</code> in bit masks.
+        </div>
+
+        <h3>Why always clear before set (multi-bit fields)</h3>
+        <div class="callout warn">
+          OR-ing without clearing first leaves old bits set. Always clear the field first, then OR in the new value.
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+// ── Section collapse ────────────────────────────────────────
+function toggleSection(h2) {
+  h2.classList.toggle('collapsed');
+  const body = h2.nextElementSibling;
+  if (h2.classList.contains('collapsed')) {
+    body.style.maxHeight = body.scrollHeight + 'px';
+    requestAnimationFrame(() => {
+      body.style.transition = 'max-height .25s ease';
+      body.style.maxHeight = '0';
+    });
+  } else {
+    body.style.maxHeight = body.scrollHeight + 'px';
+    body.addEventListener('transitionend', () => { body.style.maxHeight = ''; body.style.transition = ''; }, { once: true });
+  }
+}
+
+// ── Copy buttons ─────────────────────────────────────────────
+function copyCode(btn) {
+  const pre = btn.nextElementSibling;
+  navigator.clipboard.writeText(pre.innerText).then(() => {
+    btn.textContent = 'copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('copied'); }, 1500);
+  });
+}
+
+// ── Active nav highlight ──────────────────────────────────────
+const sections = document.querySelectorAll('section[id]');
+const navLinks  = document.querySelectorAll('.nav-link');
+
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      navLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + e.target.id));
+    }
+  });
+}, { rootMargin: '-20% 0px -70% 0px' });
+
+sections.forEach(s => observer.observe(s));
+
+// ── Number base converter ─────────────────────────────────────
+function convertFrom(base) {
+  const binEl = document.getElementById('conv-bin');
+  const decEl = document.getElementById('conv-dec');
+  const hexEl = document.getElementById('conv-hex');
+
+  [binEl, decEl, hexEl].forEach(el => el.classList.remove('error'));
+
+  let val;
+  try {
+    if (base === 'bin') {
+      const s = binEl.value.replace(/\s/g, '');
+      if (s === '') { decEl.value = hexEl.value = ''; return; }
+      if (!/^[01]+$/.test(s)) throw new Error();
+      val = parseInt(s, 2);
+    } else if (base === 'dec') {
+      const s = decEl.value.trim();
+      if (s === '') { binEl.value = hexEl.value = ''; return; }
+      val = parseInt(s, 10);
+      if (isNaN(val)) throw new Error();
+    } else {
+      const s = hexEl.value.replace(/^0x/i, '').trim();
+      if (s === '') { binEl.value = decEl.value = ''; return; }
+      if (!/^[0-9a-fA-F]+$/.test(s)) throw new Error();
+      val = parseInt(s, 16);
+    }
+    if (val < 0 || val > 0xFFFFFFFF) throw new Error();
+
+    if (base !== 'bin') binEl.value = val.toString(2).padStart(val <= 0xFF ? 8 : val <= 0xFFFF ? 16 : 32, '0');
+    if (base !== 'dec') decEl.value = val.toString(10);
+    if (base !== 'hex') hexEl.value = val.toString(16).toUpperCase().padStart(2, '0');
+  } catch {
+    if (base === 'bin') binEl.classList.add('error');
+    if (base === 'dec') decEl.classList.add('error');
+    if (base === 'hex') hexEl.classList.add('error');
+  }
+}
+
+// ── 8-bit visualizer ─────────────────────────────────────────
+const bitRow   = document.getElementById('bit-row');
+const labelRow = document.getElementById('bit-label-row');
+let bits = new Array(8).fill(0);
+
+function buildBitViz() {
+  bitRow.innerHTML = '';
+  labelRow.innerHTML = '';
+  for (let i = 7; i >= 0; i--) {
+    const b = document.createElement('div');
+    b.className = 'bit' + (i === 7 ? ' msb' : '') + (bits[i] ? ' on' : '');
+    b.textContent = bits[i];
+    b.title = `bit ${i}`;
+    b.addEventListener('click', () => { bits[i] ^= 1; buildBitViz(); });
+    bitRow.appendChild(b);
+
+    const lbl = document.createElement('div');
+    lbl.className = 'bit-label';
+    lbl.textContent = i;
+    labelRow.appendChild(lbl);
+  }
+  updateVizResults();
+}
+
+function updateVizResults() {
+  let unsigned = 0;
+  for (let i = 0; i < 8; i++) unsigned |= (bits[i] << i);
+  const signed = unsigned >= 128 ? unsigned - 256 : unsigned;
+  const hex = unsigned.toString(16).padStart(2, '0').toUpperCase();
+
+  document.getElementById('viz-unsigned').textContent = unsigned;
+  document.getElementById('viz-signed').textContent   = signed;
+  document.getElementById('viz-hex').textContent      = '0x' + hex;
+}
+
+buildBitViz();
+</script>
+</body>
+</html>
