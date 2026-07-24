@@ -26,6 +26,8 @@
 > - Paste solution code even as a "reference"
 >
 > If the student explicitly asks for the answer, Claude responds: *"I can't give you the answer — that's the rule. Tell me where you're stuck and I'll point you to the right section of the datasheet."*
+>
+> **Exception — any concept with no reference-doc coverage:** RM035/DUI0553/the datasheet/UM1724 cover STM32 hardware — they do NOT cover the ELF/binary file format, GNU `ld` linker script syntax (`SECTIONS`, the location counter, symbol placement), CMake flag syntax, the compile → assemble → link → objcopy pipeline, GCC-specific C extensions (`__attribute__((section(...)))`), general CS data structures/algorithms (e.g. ring buffers, schedulers), newlib/libc syscall retargeting, or third-party protocols/APIs (e.g. XMODEM, USB descriptors, FreeRTOS). For any of these — there is no page to point to — Claude explains the mechanism directly with a plain worked example *before* resuming Socratic questions to check the student can apply it. This exception does NOT extend to STM32 register/peripheral/memory-map content, which must always be derived from the reference manuals per the rule above. (Broadened 2026-07-24 during a curriculum audit — the original wording named only `ld`/CMake/build-pipeline and let an ELF-format gap and a vector-table-syntax gap slip through in E01–E04.)
 
 ---
 
@@ -37,13 +39,14 @@
 | ARM Cortex-M4 Generic User Guide | `DUI0553.pdf` | CPU architecture, NVIC, SysTick, FPU |
 | STM32L476RG Datasheet | `stm32l476rg_datasheet.pdf` | Pinout, electrical specs, memory map overview |
 | NUCLEO-L476RG User Manual | `UM1724_user_manual.pdf` | Board schematic, ST-LINK, pin headers |
+| *(none — taught directly)* | GNU `ld` / CMake / build pipeline | Linker script syntax, toolchain flags, compile→link→objcopy stages — no PDF covers these; see teaching-rule exception above |
 
 ## Tier Overview
 
 | Tier | Chapters | Hardware Needed | Header Strategy |
 |------|----------|-----------------|-----------------|
 | Foundations | F01–F09 | None (host Linux) | N/A |
-| Entry | E01–E07 | NUCLEO-L476RG + USB cable | Hand-derived `#define`s |
+| Entry | E01–E08 | NUCLEO-L476RG + USB cable (E01–E04 are host-only, no board needed) | Hand-derived `#define`s |
 | Novice | N01–N06 | Same + jumper wires | Hand-derived `#define`s |
 | Intermediate | I01–I06 | Same + breadboard components | Own `stm32l476.h` (built incrementally from I04) |
 | Expert | X01–X06 | Same + USB micro cable | CMSIS headers introduced as comparison |
@@ -85,7 +88,7 @@ Break projects (`BP-NN`) slot in after each tier. Device is provided by you; we 
 - [x] `int8_t`, `int16_t`, `int32_t` (signed)
 - [x] The `U` suffix: `0x48000000UL` vs `0x48000000`
 - [x] `SIZE_MAX`, `UINT32_MAX` sentinels
-- **Exercise:** Declare registers as `volatile uint32_t`; observe what happens with plain `int` in a bit-shift edge case ✓
+- **Exercise:** Declare registers as `uint32_t`; observe what happens with plain `int` in a bit-shift edge case ✓
 
 ### F05 — The `volatile` Keyword
 - [x] What the C compiler optimizer assumes about memory
@@ -139,39 +142,55 @@ Break projects (`BP-NN`) slot in after each tier. Device is provided by you; we 
 
 > All register addresses derived by hand from RM035. No ST or CMSIS headers.
 
-### E01 — Toolchain & CMake Setup
-- [x] Install arm-none-eabi-gcc, cmake, ninja, openocd
-- [x] Write `cmake/arm-none-eabi.cmake` toolchain file — placed at `NUCLEO-L476RG/cmake/` instead (board-only structure, not shared across boards)
-- [x] Write `NUCLEO-L476RG/cmake/stm32l476rg.cmake` (MCU flags: `-mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard`)
-- [x] Write a minimal CMakeLists.txt for a chapter project (`entry/e01-toolchain-setup/`) — configure-only, no link (no startup/linker script until E04)
-- [ ] Flash a pre-built `.bin` with OpenOCD to verify the chain works — ⏭ deferred, no .bin available yet; used `openocd -f board/st_nucleo_l4.cfg` connect-only check instead
-- **Verify:** ST-LINK connects ✓; OpenOCD flashes without error — pending real .bin (E04)
+### E01 — ELF & Binary Format Fundamentals
+> Taught directly (no RM035/DUI0553/datasheet/UM1724 page covers this — see teaching-rule exception). Host-only, no board or cross-compiler needed: uses the system's native `gcc`, since the ARM cross-compiler isn't installed until E02.
+- [ ] Why `.elf` exists: the linker's output — merges all `.o` files, resolves every symbol reference, assigns final addresses per the linker script, adds debug/symbol metadata. Contrast with `.o`: sections reserved, but addresses are still placeholders.
+- [ ] ELF header: magic number (`0x7F 'E' 'L' 'F'`), 32/64-bit class, machine type, entry point address, offsets to the section header table and program header table
+- [ ] Section header table: the *linking/debugging* view — `.text`, `.rodata`, `.data`, `.bss` (occupies no file bytes, just a byte count), `.symtab` (name→address), `.strtab` (symbol name strings), debug sections
+- [ ] Program header table: the *loading* view — segments (`PT_LOAD`), each a file-offset → memory-address → size → permissions mapping; how a flashing tool uses this, since bare metal has no runtime ELF loader
+- [ ] Sections vs. segments: same underlying bytes, two different groupings for two different consumers
+- [ ] Why `.bin`/`.hex` exist: `objcopy` strips all ELF metadata down to raw bytes only, because flash memory doesn't understand ELF — this is what actually gets flashed
+- **Exercise:** Compile a trivial `.c` with the host's native `gcc`; run `readelf -h`, `readelf -S`, `readelf -l`, and `objdump -h` on the result. Identify the entry point address, name at least four sections, and identify one `PT_LOAD` segment.
+- **Verify:** Can explain, unprompted, what happens to a `.bss` variable between the section header table entry and the final flashed image (i.e., why it costs 0 file bytes but real RAM bytes).
 
-### E02 — How to Read the Reference Manual
-- [x] RM035 §1: document conventions, register notation (`Res.`, `rw`, `r`, `w`, plus `rs`, `rwo`)
-- [x] Memory map table (RM035 §2.2): how to read base address + offset
-- [x] Register description layout: bit position, name, reset value, access type, description
-- [x] Difference between RM035, datasheet, DUI0553, and UM1724
-- [x] How to search a 1400-page PDF efficiently
-- **Exercise:** Locate the GPIOA base address and the MODER register offset; derive the full address manually ✓ GPIOA base `0x48000000` (AHB2), MODER offset `0x00`, full address `0x48000000`
+### E02 — Toolchain & CMake Setup
+- [ ] **Prerequisite concepts (taught directly — no reference-doc page, see teaching-rule exception):** what a cross-compiler is and why bare metal needs one (`arm-none-eabi-gcc` targets Cortex-M machine code, not the host's own x86/x64)
+- [ ] Build pipeline overview: source (`.c`) → preprocess → compile to object file (`.o`, sections reserved, no final addresses — see E01) → link (`.elf`, all `.o`s merged, real addresses assigned per the linker script) → `objcopy` extracts a raw `.bin`/`.hex` for flashing
+- [ ] Why CMake needs a toolchain file at all: it tells CMake to use the cross-compiler instead of the host's default compiler, and `CMAKE_SYSTEM_NAME Generic` tells it there's no OS underneath
+- [ ] Install arm-none-eabi-gcc, cmake, ninja, openocd
+- [ ] Write `cmake/arm-none-eabi.cmake` toolchain file
+- [ ] Write `NUCLEO-L476RG/cmake/stm32l476rg.cmake` (MCU flags: `-mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard`)
+- [ ] Write a minimal CMakeLists.txt for a chapter project (`entry/e02-toolchain-setup/`) — configure-only, no link (no startup/linker script until E05)
+- [ ] Flash a pre-built `.bin` with OpenOCD to verify the chain works
+- **Verify:** ST-LINK connects; OpenOCD flashes without error
 
-### E03 — Memory Map from Scratch
-- [x] Code Flash: `0x0800 0000` – `0x080F FFFF` (1 MB)
-- [x] SRAM1/SRAM2 addresses
-- [x] Peripheral bus addresses: AHB1, AHB2, APB1, APB2
-- [x] Writing a minimal `registers.h` with only base address `#define`s
-- [x] Volatile pointer casting in context (links back to F06)
-- **Exercise:** Open RM035 §2.2; write `#define`s for GPIOA, GPIOB, RCC, USART2 base addresses by reading the table ✓ done in `entry/e03-memory-map/registers.h`; also closed the F06 volatile-cast exercise gap in `main.c`
+### E03 — How to Read the Reference Manual
+- [ ] RM035 §1: document conventions, register notation (`Res.`, `rw`, `r`, `w`, plus `rs`, `rwo`)
+- [ ] Memory map table (RM035 §2.2): how to read base address + offset
+- [ ] Register description layout: bit position, name, reset value, access type, description
+- [ ] Difference between RM035, datasheet, DUI0553, and UM1724
+- [ ] How to search a 1400-page PDF efficiently
+- **Exercise:** Locate the GPIOA base address and the MODER register offset; derive the full address manually
 
-### E04 — Startup Code & Linker Script
+### E04 — Memory Map from Scratch
+- [ ] Code Flash: `0x0800 0000` – `0x080F FFFF` (1 MB)
+- [ ] SRAM1/SRAM2 addresses
+- [ ] Peripheral bus addresses: AHB1, AHB2, APB1, APB2
+- [ ] Writing a minimal `registers.h` with only base address `#define`s
+- [ ] Volatile pointer casting in context (links back to F06)
+- **Exercise:** Open RM035 §2.2; write `#define`s for GPIOA, GPIOB, RCC, USART2 base addresses by reading the table
+
+### E05 — Startup Code & Linker Script
 - [ ] ARM Cortex-M reset sequence (DUI0553 §2.3): what happens at power-on
 - [ ] The vector table: what it is, where it lives (address `0x0800 0000`), how it's structured (DUI0553 §2.3.4)
-- [ ] Writing the vector table as a C array with `__attribute__((section(".isr_vector")))`
-- [ ] Writing `Reset_Handler`: copy .data from flash to SRAM, zero .bss, call `main()`
+- [ ] **Vector table C syntax, taught directly (no reference-doc page — see teaching-rule exception):** `__attribute__((section(".isr_vector")))` as a GCC section-placement extension, C99 designated initializers (`[0] = ...`), and function-pointer-array declaration syntax — none of these are documented by RM035/DUI0553, they're C/GCC language mechanics
+- [ ] `.data` vs `.bss` conceptual distinction: `.data` = initialized globals, initial values must persist in flash (SRAM is wiped on power-off) and get copied to SRAM before `main()`; `.bss` = uninitialized globals, C guarantees zero-init so no flash storage needed, just zeroed directly
+- [ ] GNU `ld` symbol convention taught directly (no reference-doc page — see teaching-rule exception): `SECTIONS` block, the location counter (`.`), planting a named symbol as a start/end marker; symbols are declared `extern` in C and accessed via `&symbol` (address-of), never dereferenced
+- [ ] Writing `Reset_Handler`: copy `.data` from flash to SRAM, zero `.bss`, call `main()`
 - [ ] Writing `STM32L476RGTx_FLASH.ld`: MEMORY regions, SECTIONS (.text, .rodata, .data, .bss)
 - **Verify:** Board runs past startup into `main()` (confirm with a GPIO toggle in main)
 
-### E05 — RCC Clock System
+### E06 — RCC Clock System
 - [ ] RCC base address from RM035 §6
 - [ ] `RCC_CR`: HSI16 enable/ready bits
 - [ ] `RCC_CFGR`: system clock switch, AHB/APB prescalers
@@ -179,7 +198,7 @@ Break projects (`BP-NN`) slot in after each tier. Device is provided by you; we 
 - [ ] Why touching a peripheral without its clock enabled silently does nothing (or hard faults)
 - **Exercise:** Enable HSI16, confirm it's ready by polling HSIRDY, switch SYSCLK to HSI16
 
-### E06 — GPIO from the Register Map
+### E07 — GPIO from the Register Map
 - [ ] GPIOA base: `0x4800 0000` (RM035 §8.4)
 - [ ] `MODER` (offset 0x00): mode selection — 00 input, 01 output, 10 alt fn, 11 analog
 - [ ] `OTYPER` (0x04): push-pull vs open-drain
@@ -191,12 +210,13 @@ Break projects (`BP-NN`) slot in after each tier. Device is provided by you; we 
 - [ ] NUCLEO schematic (UM1724): identify LED pin (PA5) and button pin (PC13)
 - **Verify:** LED blinks at 1 Hz; button press changes blink rate — all via hand-derived register access
 
-### E07 — UART Polling
+### E08 — UART Polling
 - [ ] USART2 base: `0x4000 4400` (RM035 §40)
 - [ ] Baud rate register `BRR`: baud = PCLK / BRR; calculate for 115200 at 16 MHz HSI
 - [ ] `CR1`: USART enable (UE), transmitter enable (TE), receiver enable (RE)
 - [ ] `ISR`: TXE (transmit buffer empty), RXNE (receive buffer not empty)
 - [ ] `TDR`/`RDR`: transmit/receive data registers
+- [ ] **Newlib syscall retargeting, taught directly (no reference-doc page — see teaching-rule exception):** how `printf` calls down to `_write()`, what a syscall stub is, and why the linker complains about `_exit`/`_write`/etc. if they're missing — this already caused real confusion during the E01/E04 session (see question-log.md history) and has no RM035/DUI0553 coverage
 - [ ] Retargeting `_write()` to send printf output over UART to a terminal
 - **Verify:** `printf("Hello\n")` appears in minicom/screen at 115200 baud
 
@@ -246,6 +266,7 @@ Break projects (`BP-NN`) slot in after each tier. Device is provided by you; we 
 
 ### N05 — UART with Interrupts
 - [ ] `USART2_IRQHandler`: reading `RDR` when `RXNE` is set
+- [ ] **Ring buffer, taught directly (no reference-doc page — see teaching-rule exception):** a general CS data structure, not covered by any STM32 doc — head/tail index mechanics and the wrap-around arithmetic need a worked example before the exercise below
 - [ ] Circular ring buffer: head/tail indices, wrap-around, full/empty detection
 - [ ] `CR1` RXNEIE bit: enable receive interrupt
 - [ ] Non-blocking `uart_read_byte()` consuming from the ring buffer
@@ -360,12 +381,14 @@ Break projects (`BP-NN`) slot in after each tier. Device is provided by you; we 
 - [ ] Dual-region flash layout: bootloader at `0x0800 0000`, application at `0x0801 0000`
 - [ ] Application vector table offset: `SCB->VTOR = 0x08010000`
 - [ ] Jumping from bootloader to app: function pointer to app reset handler
+- [ ] **XMODEM protocol, taught directly (no reference-doc page — see teaching-rule exception):** external protocol spec, not covered by RM035/DUI0553/datasheet/UM1724 — packet framing, checksums, and the handshake need direct explanation if XMODEM is the chosen transfer method
 - [ ] UART firmware update: receive new `.bin` via XMODEM or raw bytes, write to app region
 - [ ] Fallback: if app region invalid (first word not a valid stack pointer), stay in bootloader
 - **Verify:** Flash bootloader; send new app binary over UART; board boots new app without JTAG
 
 ### X04 — USB CDC (Virtual COM Port)
 - [ ] STM32L476 USB FS peripheral (RM035 §44)
+- [ ] **USB spec fundamentals, taught directly (no reference-doc page yet — see teaching-rule exception):** RM035 covers the STM32 USB *peripheral registers* but not the USB protocol spec itself — descriptor formats, endpoint types, and the enumeration state machine come from the USB 2.0/CDC class specifications, which should be sourced and added to the Reference Documents table before this chapter starts
 - [ ] USB descriptor tables: device, configuration, interface, endpoint descriptors
 - [ ] Enumeration sequence: host requests, device responses
 - [ ] Bulk transfer endpoint setup for CDC data class
@@ -374,6 +397,7 @@ Break projects (`BP-NN`) slot in after each tier. Device is provided by you; we 
 - **Verify:** Board appears as `/dev/ttyACMx` on Linux; send/receive data
 
 ### X05 — Bare Metal Cooperative Scheduler
+- [ ] **Round-robin scheduling concept, taught directly (no reference-doc page — see teaching-rule exception):** a general CS/firmware-architecture pattern, not hardware-derived — the iterate-check-call loop shape and why cooperative tasks must return promptly need a worked example first
 - [ ] Task struct: function pointer, period, last-run tick
 - [ ] Round-robin scheduler loop: iterate tasks, check if period elapsed, call if due
 - [ ] Cooperative yield: tasks must return promptly; no blocking inside tasks
@@ -382,6 +406,7 @@ Break projects (`BP-NN`) slot in after each tier. Device is provided by you; we 
 - **Verify:** Three tasks run concurrently at different rates; verify timing with GPIO toggles on scope
 
 ### X06 — FreeRTOS on Bare Metal
+- [ ] **FreeRTOS fundamentals, taught directly (no reference-doc page yet — see teaching-rule exception):** FreeRTOS is a third-party RTOS API, not covered by RM035/DUI0553/datasheet/UM1724 — FreeRTOS's own documentation should be sourced and added to the Reference Documents table before this chapter starts
 - [ ] FreeRTOS port for Cortex-M4: `port.c`, `portmacro.h`
 - [ ] Integrating FreeRTOS source into our CMake project (no CubeMX)
 - [ ] Tasks: `xTaskCreate`, task function signature, priorities
@@ -427,13 +452,14 @@ Mark chapters complete by checking off the checklist items above, then updating 
 | F08 | ✅ Complete | 2026-07-11 | Chip marking decode, package types, module silkscreen decode, resistor/cap EIA codes (self-reported), comm-interface pin ID all covered; exercise done on real GC9A01 module (SPI, 7 pins, no BLK) |
 | F09 | ✅ Complete | 2026-07-11 | Datasheet found (GC9A01A, Galaxycore) and saved to bp01 project folder; located timing + command sections |
 | BP-01 | ⏸ Paused | 2026-07-11 | Device: GC9A01 display. Datasheet found and saved; paused before wiring/driver work — overwhelmed by hardware terminology, resuming after Entry tier |
-| E01 | ✅ Complete | 2026-07-12 | Toolchain verified: arm-none-eabi-gcc (STM32Cube bundle), cmake, ninja, openocd installed. Toolchain files at NUCLEO-L476RG/cmake/ (arm-none-eabi.cmake generic, stm32l476rg.cmake board-specific; C++ compiler found but flags left out for now). Configure test passed in entry/e01-toolchain-setup/. OpenOCD + ST-LINK connectivity confirmed (Cortex-M4 detected); actual .bin flash deferred to E04 once real firmware exists |
-| E02 | ✅ Complete | 2026-07-12 | Register notation (rw/r/w/Res./rs/rwo), memory map base+offset, doc differentiation (RM035/datasheet/DUI0553/UM1724), PDF search tip all covered; exercise done: derived GPIOA_MODER = 0x48000000 + 0x00 = 0x48000000 |
-| E03 | ✅ Complete | 2026-07-13 | Flash/SRAM1/SRAM2 addresses, AHB1/AHB2/APB1/APB2 base addresses (with Reserved-vs-real-peripheral distinction on AHB2), registers.h with base #defines, volatile pointer cast in main.c (closed F06 exercise gap) |
-| E04 | ⬜ Not started | — | |
-| E05 | ⬜ Not started | — | |
-| E06 | ⬜ Not started | — | |
-| E07 | ⬜ Not started | — | |
+| E01 | ⬜ Not started | — | Entry tier restructured + reset 2026-07-24 (curriculum audit): new chapter, ELF/binary format fundamentals, inserted ahead of toolchain setup |
+| E02 | ⬜ Not started | — | Was old E01 (Toolchain & CMake Setup); progress reset 2026-07-24 as part of Entry tier restructure |
+| E03 | ⬜ Not started | — | Was old E02 (How to Read the Reference Manual); progress reset 2026-07-24 as part of Entry tier restructure |
+| E04 | ⬜ Not started | — | Was old E03 (Memory Map from Scratch); progress reset 2026-07-24 as part of Entry tier restructure |
+| E05 | ⬜ Not started | — | Was old E04 (Startup Code & Linker Script); progress reset 2026-07-24 as part of Entry tier restructure |
+| E06 | ⬜ Not started | — | Was old E05 (RCC Clock System) |
+| E07 | ⬜ Not started | — | Was old E06 (GPIO from the Register Map) |
+| E08 | ⬜ Not started | — | Was old E07 (UART Polling) |
 | BP-02 | ⬜ Not started | — | Device: TBD |
 | N01 | ⬜ Not started | — | |
 | N02 | ⬜ Not started | — | |

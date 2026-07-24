@@ -27,7 +27,7 @@ Claude should scan this log at the start of each session and surface any pattern
 
 ## Entries
 
-*(No entries yet — training starts here)*
+*(cleared 2026-07-24 — Entry tier was restructured and reset after a curriculum audit; the prior session's entries were logged against progress that no longer exists. The gap they identified — toolchain/GCC/binary-format mechanics having no reference-doc page — is now permanently encoded in agenda.md's generalized teaching-rule exception and the new chapter-specific flag bullets, so no information was lost by clearing this log.)*
 
 ---
 
@@ -35,4 +35,3 @@ Claude should scan this log at the start of each session and surface any pattern
 
 | Topic | Count | Related Chapter | Status |
 |-------|-------|----------------|--------|
-| *(none yet)* | — | — | — |
