@@ -1,3 +1,6 @@
 build/
 *.o
 *.out
+
+# compiled chapter binaries (source is main.c; output has no extension)
+**/main
