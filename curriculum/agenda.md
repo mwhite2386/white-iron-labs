@@ -4,6 +4,8 @@
 **Toolchain:** GCC (arm-none-eabi) + CMake
 **Approach:** No vendor headers until Expert tier — every register address derived by hand from the reference manual
 
+This file is the course template: syllabus, chapter content, and teaching rules only. It should stay generic so the repo can be forked cleanly by other students. Per-student completion state, exercise notes, and progress tracking live in `curriculum/progress.md` instead.
+
 ---
 
 > ## ⚠ CRITICAL TEACHING RULE — APPLIES TO ALL CHAPTERS, ALL TIERS
@@ -27,7 +29,37 @@
 >
 > If the student explicitly asks for the answer, Claude responds: *"I can't give you the answer — that's the rule. Tell me where you're stuck and I'll point you to the right section of the datasheet."*
 >
-> **Exception — any concept with no reference-doc coverage:** RM035/DUI0553/the datasheet/UM1724 cover STM32 hardware — they do NOT cover the ELF/binary file format, GNU `ld` linker script syntax (`SECTIONS`, the location counter, symbol placement), CMake flag syntax, the compile → assemble → link → objcopy pipeline, GCC-specific C extensions (`__attribute__((section(...)))`), general CS data structures/algorithms (e.g. ring buffers, schedulers), newlib/libc syscall retargeting, or third-party protocols/APIs (e.g. XMODEM, USB descriptors, FreeRTOS). For any of these — there is no page to point to — Claude explains the mechanism directly with a plain worked example *before* resuming Socratic questions to check the student can apply it. This exception does NOT extend to STM32 register/peripheral/memory-map content, which must always be derived from the reference manuals per the rule above. (Broadened 2026-07-24 during a curriculum audit — the original wording named only `ld`/CMake/build-pipeline and let an ELF-format gap and a vector-table-syntax gap slip through in E01–E04.)
+> **Exception — any concept with no reference-doc coverage:** RM035/DUI0553/the datasheet/UM1724 cover STM32 hardware — they do NOT cover the ELF/binary file format, GNU `ld` linker script syntax (`SECTIONS`, the location counter, symbol placement), CMake flag syntax, the compile → assemble → link → objcopy pipeline, GCC-specific C extensions (`__attribute__((section(...)))`), general CS data structures/algorithms (e.g. ring buffers, schedulers), newlib/libc syscall retargeting, or third-party protocols/APIs (e.g. XMODEM, USB descriptors, FreeRTOS). For any of these — there is no page to point to — Claude explains the mechanism directly with a plain worked example *before* resuming Socratic questions to check the student can apply it. This exception does NOT extend to STM32 register/peripheral/memory-map content, which must always be derived from the reference manuals per the rule above.
+>
+---
+
+> ## ⚠ TEACHING SEQUENCE RULE — CONCEPT BEFORE EXERCISE, EVERY CHAPTER
+>
+> Every chapter's checklist items are concept-teaching; the exercise/verify step is application. The concept must be established *before* the student is asked to apply it, using whichever method fits the content:
+>
+> - **Derivation-heavy content** (register values, addresses, bit math, timing calculations): concept is built via the Socratic questioning described above.
+> - **Reference/lookup content** (e.g. F08 module-marking ID, F09 datasheet navigation, pin-naming conventions, package types): taught directly — it's pattern recognition and research method, not first-principles reasoning, so there's nothing to derive. The exercise is applying the table/method to the case in front of the student, not deriving the table itself.
+> - **Idiomatic syntax/convention** (e.g. casting a linker-defined symbol's address into a function-pointer array slot): taught directly even inside an otherwise derivation-heavy chapter, once the underlying concept has already been correctly derived. This is boilerplate every bare-metal project copies verbatim, not something derivable from first principles.
+>
+> This is a different axis from the reference-doc-coverage exception above. That one is about *why* something is taught directly (no page exists to point to, regardless of chapter type). This rule is about *when*: regardless of whether reference-doc coverage exists, the concept is taught — by whichever method fits — before the student is quizzed on applying it. Never open a chapter or a new concept with a barrage of Socratic questions before any teaching has happened.
+>
+> If the student signals that a concept feels too deep or out of scope for the current chapter (e.g. "too advanced," "I wouldn't be here if I knew this"), treat it as a signal to drop back to direct teaching immediately rather than continuing to probe.
+>
+> (Added 2026-07-27 after repeat instances in F08, F09, and E04 where Socratic questioning was pushed onto reference content or syntax idioms the student had no way to derive, because no teaching had preceded the questions.)
+
+---
+
+> ## ⚠ PACING RULE — LET THE STUDENT REDIRECT DIFFICULTY AND FORMAT
+>
+> - **Host-simulated coding exercises** (Foundations-tier stand-ins that just prove a point, e.g. compiling on Linux to observe a segfault or inspect assembly output): once the concept is verified through discussion, offer the student the choice to skip the hands-on version rather than pushing them through it. This does not apply to non-coding research/identification chapters (F08/F09-style datasheet reading, chip marking ID) — those should be done in full regardless.
+> - **Overwhelm signals** (a wall of unfamiliar terminology, e.g. jumping into a real external-device datasheet right after Foundations for a break project): offer to pause and reorder — for example, move to the next hardware-based tier's chapters before returning to the paused work — rather than pushing through on the spot.
+> - In both cases, the student's choice governs. Log the outcome in `curriculum/progress.md`, not here.
+
+---
+
+> ## ⚠ VERIFY-BEFORE-ASKING RULE
+>
+> Before asking the student a lookup/derivation question that cites a specific reference-doc table or section, confirm it directly yourself first (e.g. `pdftotext -layout` on the relevant PDF) — never guess a table or section number aloud. This doesn't violate the no-answers rule above: grounding your own knowledge before asking is different from handing the student the value. You still withhold the value and let them find or derive it themselves.
 
 ---
 
@@ -60,77 +92,77 @@ Break projects (`BP-NN`) slot in after each tier. Device is provided by you; we 
 > No hardware needed. Exercises compile and run on Linux. Focus: the C features that separate bare metal from application programming.
 
 ### F01 — Binary, Hex & Number Representation
-- [x] Binary, decimal, hex conversions by hand and in C
-- [x] Two's complement (how negative numbers work in a register)
-- [x] Why peripheral addresses are always written in hex (`0x48000000`)
-- [x] `0b` binary literals, `0x` hex literals, digit grouping
-- **Exercise:** Convert a set of addresses from the RM035 memory map table to binary; identify which bits are set ✓ (TIM2, RTC, UART5)
+- Binary, decimal, hex conversions by hand and in C
+- Two's complement (how negative numbers work in a register)
+- Why peripheral addresses are always written in hex (`0x48000000`)
+- `0b` binary literals, `0x` hex literals, digit grouping
+- **Exercise:** Convert a set of addresses from the RM035 memory map table to binary; identify which bits are set
 
 ### F02 — Bitwise Operators
-- [x] `&` (AND), `|` (OR), `^` (XOR), `~` (NOT/complement)
-- [x] `<<` (left shift), `>>` (right shift)
-- [x] Operator precedence — why parentheses matter
-- [x] Common mistakes: signed vs unsigned shifts, shifting past width
-- **Exercise:** Write a program that demonstrates each operator on known values and prints the results in hex ✓
+- `&` (AND), `|` (OR), `^` (XOR), `~` (NOT/complement)
+- `<<` (left shift), `>>` (right shift)
+- Operator precedence — why parentheses matter
+- Common mistakes: signed vs unsigned shifts, shifting past width
+- **Exercise:** Write a program that demonstrates each operator on known values and prints the results in hex
 
 ### F03 — Bit Manipulation Patterns
-- [x] **Set a bit:** `reg |= (1U << n)`
-- [x] **Clear a bit:** `reg &= ~(1U << n)`
-- [x] **Toggle a bit:** `reg ^= (1U << n)`
-- [x] **Test a bit:** `if ((reg & (1U << n)) == 0)`
-- [x] Multi-bit masks: setting/clearing a field (e.g. MODER[1:0])
-- [x] The `1U` vs `1` distinction and why it matters at bit 31
-- **Exercise:** Simulate a register byte; apply each pattern and verify the result ✓
+- **Set a bit:** `reg |= (1U << n)`
+- **Clear a bit:** `reg &= ~(1U << n)`
+- **Toggle a bit:** `reg ^= (1U << n)`
+- **Test a bit:** `if ((reg & (1U << n)) == 0)`
+- Multi-bit masks: setting/clearing a field (e.g. MODER[1:0])
+- The `1U` vs `1` distinction and why it matters at bit 31
+- **Exercise:** Simulate a register byte; apply each pattern and verify the result
 
 ### F04 — Fixed-Width Integers
-- [x] Why `int` size varies by architecture (16/32/64-bit)
-- [x] `uint8_t`, `uint16_t`, `uint32_t`, `uint64_t` from `<stdint.h>`
-- [x] `int8_t`, `int16_t`, `int32_t` (signed)
-- [x] The `U` suffix: `0x48000000UL` vs `0x48000000`
-- [x] `SIZE_MAX`, `UINT32_MAX` sentinels
-- **Exercise:** Declare registers as `uint32_t`; observe what happens with plain `int` in a bit-shift edge case ✓
+- Why `int` size varies by architecture (16/32/64-bit)
+- `uint8_t`, `uint16_t`, `uint32_t`, `uint64_t` from `<stdint.h>`
+- `int8_t`, `int16_t`, `int32_t` (signed)
+- The `U` suffix: `0x48000000UL` vs `0x48000000`
+- `SIZE_MAX`, `UINT32_MAX` sentinels
+- **Exercise:** Declare registers as `uint32_t`; observe what happens with plain `int` in a bit-shift edge case
 
 ### F05 — The `volatile` Keyword
-- [x] What the C compiler optimizer assumes about memory
-- [x] Why hardware registers get cached in a CPU register without `volatile`
-- [x] The infinite loop problem: polling a register without `volatile`
-- [x] `volatile` in ISR-shared variables
-- [x] What `volatile` does NOT protect against (not a synchronization primitive)
-- **Exercise:** Write a polling loop; compile with `-O2`; inspect the assembly with and without `volatile` ✓
+- What the C compiler optimizer assumes about memory
+- Why hardware registers get cached in a CPU register without `volatile`
+- The infinite loop problem: polling a register without `volatile`
+- `volatile` in ISR-shared variables
+- What `volatile` does NOT protect against (not a synchronization primitive)
+- **Exercise:** Write a polling loop; compile with `-O2`; inspect the assembly with and without `volatile`
 
 ### F06 — Pointers & Memory Addresses
-- [x] Pointer basics review: `*`, `&`, pointer arithmetic
-- [x] Casting an integer to a pointer: `(uint32_t *)0x48000000UL`
-- [x] Adding `volatile`: `(volatile uint32_t *)0x48000000UL`
-- [x] Dereferencing to read/write: `*ptr = value`, `value = *ptr`
-- [ ] The complete bare metal register access pattern
-- **Exercise:** Write a function `reg_write(uint32_t addr, uint32_t val)` and `reg_read(uint32_t addr)` using volatile pointer casts — ⏭ skipped, not attempted
+- Pointer basics review: `*`, `&`, pointer arithmetic
+- Casting an integer to a pointer: `(uint32_t *)0x48000000UL`
+- Adding `volatile`: `(volatile uint32_t *)0x48000000UL`
+- Dereferencing to read/write: `*ptr = value`, `value = *ptr`
+- The complete bare metal register access pattern
+- **Exercise:** Write a function `reg_write(uint32_t addr, uint32_t val)` and `reg_read(uint32_t addr)` using volatile pointer casts
 
 ### F07 — Macros for Register Access
-- [x] Object-like `#define` for base addresses and offsets
-- [ ] Function-like macros with parameters
-- [ ] Building `SET_BIT(reg, bit)`, `CLEAR_BIT(reg, bit)`, `READ_BIT(reg, bit)`, `MODIFY_REG(reg, mask, val)`
-- [ ] Why CMSIS uses these exact macros (we're building the same thing)
-- [x] Macro pitfalls: missing parentheses, double evaluation
-- **Exercise:** Implement the four macros; write a test harness that verifies each against known values — ⏭ skipped, not attempted
+- Object-like `#define` for base addresses and offsets
+- Function-like macros with parameters
+- Building `SET_BIT(reg, bit)`, `CLEAR_BIT(reg, bit)`, `READ_BIT(reg, bit)`, `MODIFY_REG(reg, mask, val)`
+- Why CMSIS uses these exact macros (we're building the same thing)
+- Macro pitfalls: missing parentheses, double evaluation
+- **Exercise:** Implement the four macros; write a test harness that verifies each against known values
 
 ### F08 — Reading Component & Module Markings
-- [x] IC chip markings: manufacturer prefix, part number, package, date code, country
-- [x] Module silkscreen: `1.28" TFT VER1.0 240×240 IC:GC9A01` → GC9A01 is the display controller IC
-- [x] Package types: DIP, SOIC, TQFP, QFN, BGA, SOT-23 — how to identify from footprint
-- [x] Resistor color codes, capacitor markings (EIA codes) — self-reported prior knowledge, not walked through together
-- [x] How to identify the communication interface from module markings (SPI/I2C/UART/parallel pins)
-- **Exercise:** Given three mystery module photos, identify the driver IC and communication interface — ✓ done on real GC9A01 module: driver IC = GC9A01, interface = SPI (4-wire), pins `RST, CS, DC, SDA, SCL, GND, VCC` (SDA/SCL labels are holdovers, actually MOSI/SCK), no BLK pin (backlight hardwired on)
+- IC chip markings: manufacturer prefix, part number, package, date code, country
+- Module silkscreen: `1.28" TFT VER1.0 240×240 IC:GC9A01` → GC9A01 is the display controller IC
+- Package types: DIP, SOIC, TQFP, QFN, BGA, SOT-23 — how to identify from footprint
+- Resistor color codes, capacitor markings (EIA codes)
+- How to identify the communication interface from module markings (SPI/I2C/UART/parallel pins)
+- **Exercise:** Given three mystery module photos, identify the driver IC and communication interface
 
 ### F09 — Finding & Reading External Device Datasheets
-- [ ] How to find a datasheet: part number → manufacturer site → datasheet aggregators
-- [ ] Datasheet structure for a peripheral IC vs an MCU reference manual
-- [ ] Pin description table: signal names, directions, logic levels
-- [ ] Electrical characteristics: VDD range, logic thresholds, max current
-- [ ] Communication protocol section: SPI/I2C timing diagrams
-- [ ] Initialization sequence tables: register writes in order
-- [ ] How this maps to what we do in break projects
-- [x] **Exercise:** Find the GC9A01 datasheet; locate the SPI timing section and initialization register sequence ✓ Found GC9A01A datasheet (Galaxycore), placed in `break-projects/bp01-gc9a01-display/docs/`; located 4-wire serial timing diagram (p.190) and command list (§6)
+- How to find a datasheet: part number → manufacturer site → datasheet aggregators
+- Datasheet structure for a peripheral IC vs an MCU reference manual
+- Pin description table: signal names, directions, logic levels
+- Electrical characteristics: VDD range, logic thresholds, max current
+- Communication protocol section: SPI/I2C timing diagrams
+- Initialization sequence tables: register writes in order
+- How this maps to what we do in break projects
+- **Exercise:** Find the device's datasheet; locate the SPI/I2C timing section and initialization register sequence
 
 ---
 
@@ -144,80 +176,80 @@ Break projects (`BP-NN`) slot in after each tier. Device is provided by you; we 
 
 ### E01 — ELF & Binary Format Fundamentals
 > Taught directly (no RM035/DUI0553/datasheet/UM1724 page covers this — see teaching-rule exception). Host-only, no board or cross-compiler needed: uses the system's native `gcc`, since the ARM cross-compiler isn't installed until E02.
-- [ ] Why `.elf` exists: the linker's output — merges all `.o` files, resolves every symbol reference, assigns final addresses per the linker script, adds debug/symbol metadata. Contrast with `.o`: sections reserved, but addresses are still placeholders.
-- [ ] ELF header: magic number (`0x7F 'E' 'L' 'F'`), 32/64-bit class, machine type, entry point address, offsets to the section header table and program header table
-- [ ] Section header table: the *linking/debugging* view — `.text`, `.rodata`, `.data`, `.bss` (occupies no file bytes, just a byte count), `.symtab` (name→address), `.strtab` (symbol name strings), debug sections
-- [ ] Program header table: the *loading* view — segments (`PT_LOAD`), each a file-offset → memory-address → size → permissions mapping; how a flashing tool uses this, since bare metal has no runtime ELF loader
-- [ ] Sections vs. segments: same underlying bytes, two different groupings for two different consumers
-- [ ] Why `.bin`/`.hex` exist: `objcopy` strips all ELF metadata down to raw bytes only, because flash memory doesn't understand ELF — this is what actually gets flashed
+- Why `.elf` exists: the linker's output — merges all `.o` files, resolves every symbol reference, assigns final addresses per the linker script, adds debug/symbol metadata. Contrast with `.o`: sections reserved, but addresses are still placeholders.
+- ELF header: magic number (`0x7F 'E' 'L' 'F'`), 32/64-bit class, machine type, entry point address, offsets to the section header table and program header table
+- Section header table: the *linking/debugging* view — `.text`, `.rodata`, `.data`, `.bss` (occupies no file bytes, just a byte count), `.symtab` (name→address), `.strtab` (symbol name strings), debug sections
+- Program header table: the *loading* view — segments (`PT_LOAD`), each a file-offset → memory-address → size → permissions mapping; how a flashing tool uses this, since bare metal has no runtime ELF loader
+- Sections vs. segments: same underlying bytes, two different groupings for two different consumers
+- Why `.bin`/`.hex` exist: `objcopy` strips all ELF metadata down to raw bytes only, because flash memory doesn't understand ELF — this is what actually gets flashed
 - **Exercise:** Compile a trivial `.c` with the host's native `gcc`; run `readelf -h`, `readelf -S`, `readelf -l`, and `objdump -h` on the result. Identify the entry point address, name at least four sections, and identify one `PT_LOAD` segment.
 - **Verify:** Can explain, unprompted, what happens to a `.bss` variable between the section header table entry and the final flashed image (i.e., why it costs 0 file bytes but real RAM bytes).
 
 ### E02 — Toolchain & CMake Setup
-- [ ] **Prerequisite concepts (taught directly — no reference-doc page, see teaching-rule exception):** what a cross-compiler is and why bare metal needs one (`arm-none-eabi-gcc` targets Cortex-M machine code, not the host's own x86/x64)
-- [ ] Build pipeline overview: source (`.c`) → preprocess → compile to object file (`.o`, sections reserved, no final addresses — see E01) → link (`.elf`, all `.o`s merged, real addresses assigned per the linker script) → `objcopy` extracts a raw `.bin`/`.hex` for flashing
-- [ ] Why CMake needs a toolchain file at all: it tells CMake to use the cross-compiler instead of the host's default compiler, and `CMAKE_SYSTEM_NAME Generic` tells it there's no OS underneath
-- [ ] Install arm-none-eabi-gcc, cmake, ninja, openocd
-- [ ] Write `cmake/arm-none-eabi.cmake` toolchain file
-- [ ] Write `NUCLEO-L476RG/cmake/stm32l476rg.cmake` (MCU flags: `-mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard`)
-- [ ] Write a minimal CMakeLists.txt for a chapter project (`entry/e02-toolchain-setup/`) — configure-only, no link (no startup/linker script until E05)
-- [ ] Flash a pre-built `.bin` with OpenOCD to verify the chain works
+- **Prerequisite concepts (taught directly — no reference-doc page, see teaching-rule exception):** what a cross-compiler is and why bare metal needs one (`arm-none-eabi-gcc` targets Cortex-M machine code, not the host's own x86/x64)
+- Build pipeline overview: source (`.c`) → preprocess → compile to object file (`.o`, sections reserved, no final addresses — see E01) → link (`.elf`, all `.o`s merged, real addresses assigned per the linker script) → `objcopy` extracts a raw `.bin`/`.hex` for flashing
+- Why CMake needs a toolchain file at all: it tells CMake to use the cross-compiler instead of the host's default compiler, and `CMAKE_SYSTEM_NAME Generic` tells it there's no OS underneath
+- Install arm-none-eabi-gcc, cmake, ninja, openocd
+- Write `cmake/arm-none-eabi.cmake` toolchain file
+- Write `NUCLEO-L476RG/cmake/stm32l476rg.cmake` (MCU flags: `-mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard`)
+- Write a minimal CMakeLists.txt for a chapter project (`entry/e02-toolchain-setup/`) — configure-only, no link (no startup/linker script until E05)
+- Flash a pre-built `.bin` with OpenOCD to verify the chain works
 - **Verify:** ST-LINK connects; OpenOCD flashes without error
 
 ### E03 — How to Read the Reference Manual
-- [ ] RM035 §1: document conventions, register notation (`Res.`, `rw`, `r`, `w`, plus `rs`, `rwo`)
-- [ ] Memory map table (RM035 §2.2): how to read base address + offset
-- [ ] Register description layout: bit position, name, reset value, access type, description
-- [ ] Difference between RM035, datasheet, DUI0553, and UM1724
-- [ ] How to search a 1400-page PDF efficiently
+- RM035 §1: document conventions, register notation (`Res.`, `rw`, `r`, `w`, plus `rs`, `rwo`)
+- Memory map table (RM035 §2.2): how to read base address + offset
+- Register description layout: bit position, name, reset value, access type, description
+- Difference between RM035, datasheet, DUI0553, and UM1724
+- How to search a 1400-page PDF efficiently
 - **Exercise:** Locate the GPIOA base address and the MODER register offset; derive the full address manually
 
 ### E04 — Memory Map from Scratch
-- [ ] Code Flash: `0x0800 0000` – `0x080F FFFF` (1 MB)
-- [ ] SRAM1/SRAM2 addresses
-- [ ] Peripheral bus addresses: AHB1, AHB2, APB1, APB2
-- [ ] Writing a minimal `registers.h` with only base address `#define`s
-- [ ] Volatile pointer casting in context (links back to F06)
+- Code Flash: `0x0800 0000` – `0x080F FFFF` (1 MB)
+- SRAM1/SRAM2 addresses
+- Peripheral bus addresses: AHB1, AHB2, APB1, APB2
+- Writing a minimal `registers.h` with only base address `#define`s
+- Volatile pointer casting in context (links back to F06)
 - **Exercise:** Open RM035 §2.2; write `#define`s for GPIOA, GPIOB, RCC, USART2 base addresses by reading the table
 
 ### E05 — Startup Code & Linker Script
-- [ ] ARM Cortex-M reset sequence (DUI0553 §2.3): what happens at power-on
-- [ ] The vector table: what it is, where it lives (address `0x0800 0000`), how it's structured (DUI0553 §2.3.4)
-- [ ] **Vector table C syntax, taught directly (no reference-doc page — see teaching-rule exception):** `__attribute__((section(".isr_vector")))` as a GCC section-placement extension, C99 designated initializers (`[0] = ...`), and function-pointer-array declaration syntax — none of these are documented by RM035/DUI0553, they're C/GCC language mechanics
-- [ ] `.data` vs `.bss` conceptual distinction: `.data` = initialized globals, initial values must persist in flash (SRAM is wiped on power-off) and get copied to SRAM before `main()`; `.bss` = uninitialized globals, C guarantees zero-init so no flash storage needed, just zeroed directly
-- [ ] GNU `ld` symbol convention taught directly (no reference-doc page — see teaching-rule exception): `SECTIONS` block, the location counter (`.`), planting a named symbol as a start/end marker; symbols are declared `extern` in C and accessed via `&symbol` (address-of), never dereferenced
-- [ ] Writing `Reset_Handler`: copy `.data` from flash to SRAM, zero `.bss`, call `main()`
-- [ ] Writing `STM32L476RGTx_FLASH.ld`: MEMORY regions, SECTIONS (.text, .rodata, .data, .bss)
+- ARM Cortex-M reset sequence (DUI0553 §2.3): what happens at power-on
+- The vector table: what it is, where it lives (address `0x0800 0000`), how it's structured (DUI0553 §2.3.4)
+- **Vector table C syntax, taught directly (no reference-doc page — see teaching-rule exception):** `__attribute__((section(".isr_vector")))` as a GCC section-placement extension, C99 designated initializers (`[0] = ...`), and function-pointer-array declaration syntax — none of these are documented by RM035/DUI0553, they're C/GCC language mechanics
+- `.data` vs `.bss` conceptual distinction: `.data` = initialized globals, initial values must persist in flash (SRAM is wiped on power-off) and get copied to SRAM before `main()`; `.bss` = uninitialized globals, C guarantees zero-init so no flash storage needed, just zeroed directly
+- GNU `ld` symbol convention taught directly (no reference-doc page — see teaching-rule exception): `SECTIONS` block, the location counter (`.`), planting a named symbol as a start/end marker; symbols are declared `extern` in C and accessed via `&symbol` (address-of), never dereferenced
+- Writing `Reset_Handler`: copy `.data` from flash to SRAM, zero `.bss`, call `main()`
+- Writing `STM32L476RGTx_FLASH.ld`: MEMORY regions, SECTIONS (.text, .rodata, .data, .bss)
 - **Verify:** Board runs past startup into `main()` (confirm with a GPIO toggle in main)
 
 ### E06 — RCC Clock System
-- [ ] RCC base address from RM035 §6
-- [ ] `RCC_CR`: HSI16 enable/ready bits
-- [ ] `RCC_CFGR`: system clock switch, AHB/APB prescalers
-- [ ] `RCC_AHB2ENR`: enabling GPIOA clock (bit 0) before touching GPIOA registers
-- [ ] Why touching a peripheral without its clock enabled silently does nothing (or hard faults)
+- RCC base address from RM035 §6
+- `RCC_CR`: HSI16 enable/ready bits
+- `RCC_CFGR`: system clock switch, AHB/APB prescalers
+- `RCC_AHB2ENR`: enabling GPIOA clock (bit 0) before touching GPIOA registers
+- Why touching a peripheral without its clock enabled silently does nothing (or hard faults)
 - **Exercise:** Enable HSI16, confirm it's ready by polling HSIRDY, switch SYSCLK to HSI16
 
 ### E07 — GPIO from the Register Map
-- [ ] GPIOA base: `0x4800 0000` (RM035 §8.4)
-- [ ] `MODER` (offset 0x00): mode selection — 00 input, 01 output, 10 alt fn, 11 analog
-- [ ] `OTYPER` (0x04): push-pull vs open-drain
-- [ ] `OSPEEDR` (0x08): output speed
-- [ ] `PUPDR` (0x0C): pull-up / pull-down / none
-- [ ] `IDR` (0x10): input data register (read-only)
-- [ ] `ODR` (0x14): output data register
-- [ ] `BSRR` (0x18): atomic set/reset (upper 16 bits = reset, lower 16 = set)
-- [ ] NUCLEO schematic (UM1724): identify LED pin (PA5) and button pin (PC13)
+- GPIOA base: `0x4800 0000` (RM035 §8.4)
+- `MODER` (offset 0x00): mode selection — 00 input, 01 output, 10 alt fn, 11 analog
+- `OTYPER` (0x04): push-pull vs open-drain
+- `OSPEEDR` (0x08): output speed
+- `PUPDR` (0x0C): pull-up / pull-down / none
+- `IDR` (0x10): input data register (read-only)
+- `ODR` (0x14): output data register
+- `BSRR` (0x18): atomic set/reset (upper 16 bits = reset, lower 16 = set)
+- NUCLEO schematic (UM1724): identify LED pin (PA5) and button pin (PC13)
 - **Verify:** LED blinks at 1 Hz; button press changes blink rate — all via hand-derived register access
 
 ### E08 — UART Polling
-- [ ] USART2 base: `0x4000 4400` (RM035 §40)
-- [ ] Baud rate register `BRR`: baud = PCLK / BRR; calculate for 115200 at 16 MHz HSI
-- [ ] `CR1`: USART enable (UE), transmitter enable (TE), receiver enable (RE)
-- [ ] `ISR`: TXE (transmit buffer empty), RXNE (receive buffer not empty)
-- [ ] `TDR`/`RDR`: transmit/receive data registers
-- [ ] **Newlib syscall retargeting, taught directly (no reference-doc page — see teaching-rule exception):** how `printf` calls down to `_write()`, what a syscall stub is, and why the linker complains about `_exit`/`_write`/etc. if they're missing — this already caused real confusion during the E01/E04 session (see question-log.md history) and has no RM035/DUI0553 coverage
-- [ ] Retargeting `_write()` to send printf output over UART to a terminal
+- USART2 base: `0x4000 4400` (RM035 §40)
+- Baud rate register `BRR`: baud = PCLK / BRR; calculate for 115200 at 16 MHz HSI
+- `CR1`: USART enable (UE), transmitter enable (TE), receiver enable (RE)
+- `ISR`: TXE (transmit buffer empty), RXNE (receive buffer not empty)
+- `TDR`/`RDR`: transmit/receive data registers
+- **Newlib syscall retargeting, taught directly (no reference-doc page — see teaching-rule exception):** how `printf` calls down to `_write()`, what a syscall stub is, and why the linker complains about `_exit`/`_write`/etc. if they're missing — has no RM035/DUI0553 coverage
+- Retargeting `_write()` to send printf output over UART to a terminal
 - **Verify:** `printf("Hello\n")` appears in minicom/screen at 115200 baud
 
 ---
@@ -231,55 +263,55 @@ Break projects (`BP-NN`) slot in after each tier. Device is provided by you; we 
 > Still hand-derived registers. Moving from polling to interrupt-driven design.
 
 ### N01 — Interrupts & the NVIC
-- [ ] ARM exception model (DUI0553 §2.3): Reset, NMI, HardFault, IRQn
-- [ ] NVIC registers: `ISER`, `ICER`, `IPR` (priority) — addresses from DUI0553 §4.2
-- [ ] EXTI lines: mapping GPIO pins to EXTI (SYSCFG_EXTICRn), RM035 §14
-- [ ] Writing an EXTI ISR: `EXTI15_10_IRQHandler` for PC13 button
-- [ ] Priority grouping: preempt priority vs sub-priority
+- ARM exception model (DUI0553 §2.3): Reset, NMI, HardFault, IRQn
+- NVIC registers: `ISER`, `ICER`, `IPR` (priority) — addresses from DUI0553 §4.2
+- EXTI lines: mapping GPIO pins to EXTI (SYSCFG_EXTICRn), RM035 §14
+- Writing an EXTI ISR: `EXTI15_10_IRQHandler` for PC13 button
+- Priority grouping: preempt priority vs sub-priority
 - **Verify:** Button press triggers ISR; toggle LED from inside the ISR
 
 ### N02 — SysTick
-- [ ] SysTick registers: `SYST_CSR`, `SYST_RVR`, `SYST_CVR` (DUI0553 §4.4)
-- [ ] Calculating reload value for 1 ms tick at current SYSCLK
-- [ ] `SysTick_Handler` ISR: incrementing a `volatile uint32_t` tick counter
-- [ ] Blocking `delay_ms(n)` using the tick counter
-- [ ] Non-blocking timeout pattern: `uint32_t start = get_tick(); ... if (get_tick() - start > timeout)`
+- SysTick registers: `SYST_CSR`, `SYST_RVR`, `SYST_CVR` (DUI0553 §4.4)
+- Calculating reload value for 1 ms tick at current SYSCLK
+- `SysTick_Handler` ISR: incrementing a `volatile uint32_t` tick counter
+- Blocking `delay_ms(n)` using the tick counter
+- Non-blocking timeout pattern: `uint32_t start = get_tick(); ... if (get_tick() - start > timeout)`
 - **Verify:** LED blinks at precise 500 ms intervals; verify with a stopwatch
 
 ### N03 — General Purpose Timers
-- [ ] TIM2 base address (RM035 §26)
-- [ ] `PSC` (prescaler) and `ARR` (auto-reload register): `f_timer = PCLK / (PSC+1) / (ARR+1)`
-- [ ] `CR1`: counter enable (CEN), direction
-- [ ] `DIER`: update interrupt enable (UIE)
-- [ ] `SR`: update interrupt flag (UIF) — must clear in ISR
-- [ ] `TIM2_IRQHandler`: ISR for timer update event
+- TIM2 base address (RM035 §26)
+- `PSC` (prescaler) and `ARR` (auto-reload register): `f_timer = PCLK / (PSC+1) / (ARR+1)`
+- `CR1`: counter enable (CEN), direction
+- `DIER`: update interrupt enable (UIE)
+- `SR`: update interrupt flag (UIF) — must clear in ISR
+- `TIM2_IRQHandler`: ISR for timer update event
 - **Verify:** LED toggles from TIM2 ISR every 250 ms
 
 ### N04 — PWM Generation
-- [ ] TIM2 output compare mode (RM035 §26.3)
-- [ ] `CCMRx`: output compare mode bits → PWM mode 1 (110)
-- [ ] `CCRx`: capture/compare register — sets duty cycle
-- [ ] `CCER`: output enable
-- [ ] Alternate function mapping: PA0 → TIM2_CH1 (AF1) — set MODER to 10, AFRL to 0001
-- [ ] Duty cycle formula: `CCR = (duty_percent * (ARR+1)) / 100`
+- TIM2 output compare mode (RM035 §26.3)
+- `CCMRx`: output compare mode bits → PWM mode 1 (110)
+- `CCRx`: capture/compare register — sets duty cycle
+- `CCER`: output enable
+- Alternate function mapping: PA0 → TIM2_CH1 (AF1) — set MODER to 10, AFRL to 0001
+- Duty cycle formula: `CCR = (duty_percent * (ARR+1)) / 100`
 - **Verify:** LED on PA0 dims smoothly as CCR value changes; measure with multimeter or scope
 
 ### N05 — UART with Interrupts
-- [ ] `USART2_IRQHandler`: reading `RDR` when `RXNE` is set
-- [ ] **Ring buffer, taught directly (no reference-doc page — see teaching-rule exception):** a general CS data structure, not covered by any STM32 doc — head/tail index mechanics and the wrap-around arithmetic need a worked example before the exercise below
-- [ ] Circular ring buffer: head/tail indices, wrap-around, full/empty detection
-- [ ] `CR1` RXNEIE bit: enable receive interrupt
-- [ ] Non-blocking `uart_read_byte()` consuming from the ring buffer
-- [ ] Thread-safety consideration: `volatile` on head/tail, atomic read of byte
+- `USART2_IRQHandler`: reading `RDR` when `RXNE` is set
+- **Ring buffer, taught directly (no reference-doc page — see teaching-rule exception):** a general CS data structure, not covered by any STM32 doc — head/tail index mechanics and the wrap-around arithmetic need a worked example before the exercise below
+- Circular ring buffer: head/tail indices, wrap-around, full/empty detection
+- `CR1` RXNEIE bit: enable receive interrupt
+- Non-blocking `uart_read_byte()` consuming from the ring buffer
+- Thread-safety consideration: `volatile` on head/tail, atomic read of byte
 - **Verify:** Echo server — type in terminal, characters echo back; no characters lost at 115200
 
 ### N06 — I2C Fundamentals
-- [ ] I2C1 base address (RM035 §37)
-- [ ] `CR1`: PE (peripheral enable), timing configuration
-- [ ] `TIMINGR`: I2C timing register — use ST's timing calculator or formula for 100 kHz
-- [ ] `CR2`: SADD (7-bit slave address), NBYTES, START, STOP, RD_WRN
-- [ ] `ISR`: TXIS, RXNE, TC (transfer complete), BUSY, NACKF
-- [ ] Read sequence: START → address+W → register byte → repeated START → address+R → read data → STOP
+- I2C1 base address (RM035 §37)
+- `CR1`: PE (peripheral enable), timing configuration
+- `TIMINGR`: I2C timing register — use ST's timing calculator or formula for 100 kHz
+- `CR2`: SADD (7-bit slave address), NBYTES, START, STOP, RD_WRN
+- `ISR`: TXIS, RXNE, TC (transfer complete), BUSY, NACKF
+- Read sequence: START → address+W → register byte → repeated START → address+R → read data → STOP
 - **Verify:** Scan I2C bus; read device ID from an I2C device (use a temp sensor or the one on NUCLEO if present)
 
 ---
@@ -293,61 +325,61 @@ Break projects (`BP-NN`) slot in after each tier. Device is provided by you; we 
 > From I04 (DMA) onward, we build `boards/NUCLEO-L476RG/inc/stm32l476.h` incrementally — one peripheral at a time. You write every line; I guide from RM035.
 
 ### I01 — SPI Fundamentals
-- [ ] SPI1 base address (RM035 §38)
-- [ ] `CR1`: CPOL, CPHA, BR (baud rate divisor), MSTR, SPE
-- [ ] `CR2`: DS (data size), FRXTH (FIFO threshold), SSOE
-- [ ] `SR`: TXE, RXNE, BSY flags
-- [ ] `DR`: data register (write to transmit, read to receive)
-- [ ] NSS (chip select): software vs hardware control
-- [ ] SPI modes (0/1/2/3): CPOL+CPHA combinations and which devices use which
+- SPI1 base address (RM035 §38)
+- `CR1`: CPOL, CPHA, BR (baud rate divisor), MSTR, SPE
+- `CR2`: DS (data size), FRXTH (FIFO threshold), SSOE
+- `SR`: TXE, RXNE, BSY flags
+- `DR`: data register (write to transmit, read to receive)
+- NSS (chip select): software vs hardware control
+- SPI modes (0/1/2/3): CPOL+CPHA combinations and which devices use which
 - **Verify:** Send a known byte sequence; observe on logic analyzer (or loopback MOSI→MISO)
 
 ### I02 — DMA Controller
-- [ ] DMA1/DMA2 base addresses, channel registers (RM035 §11)
-- [ ] `CCRx`: EN, DIR, CIRC (circular), MINC, PINC, MSIZE, PSIZE, TEIE, TCIE
-- [ ] `CNDTRx`: number of data items
-- [ ] `CPARx`: peripheral address, `CMARx`: memory address
-- [ ] Request mapping: which DMA channel/request handles which peripheral (RM035 §11.3)
-- [ ] DMA ISR: `DMA1_Channel5_IRQHandler` (USART2 RX example)
-- [ ] Starting our shared `stm32l476.h` header with DMA defines
+- DMA1/DMA2 base addresses, channel registers (RM035 §11)
+- `CCRx`: EN, DIR, CIRC (circular), MINC, PINC, MSIZE, PSIZE, TEIE, TCIE
+- `CNDTRx`: number of data items
+- `CPARx`: peripheral address, `CMARx`: memory address
+- Request mapping: which DMA channel/request handles which peripheral (RM035 §11.3)
+- DMA ISR: `DMA1_Channel5_IRQHandler` (USART2 RX example)
+- Starting our shared `stm32l476.h` header with DMA defines
 - **Verify:** UART RX via DMA in circular mode — receive stream without CPU involvement
 
 ### I03 — ADC (Analog to Digital)
-- [ ] ADC1 base address (RM035 §16)
-- [ ] Calibration sequence: `ADCAL` bit, wait for cal complete
-- [ ] `CFGR`: resolution, alignment, continuous mode
-- [ ] `SQR1`: sequence length and first channel
-- [ ] `SMPR1/2`: sampling time per channel
-- [ ] `CR`: ADSTART, ADEN
-- [ ] `DR`: data register (result)
-- [ ] DMA-triggered ADC: continuous conversion filling a buffer
+- ADC1 base address (RM035 §16)
+- Calibration sequence: `ADCAL` bit, wait for cal complete
+- `CFGR`: resolution, alignment, continuous mode
+- `SQR1`: sequence length and first channel
+- `SMPR1/2`: sampling time per channel
+- `CR`: ADSTART, ADEN
+- `DR`: data register (result)
+- DMA-triggered ADC: continuous conversion filling a buffer
 - **Verify:** Read the internal temperature sensor (ADC channel 17); print value in °C over UART
 
 ### I04 — DAC & Waveform Generation
-- [ ] DAC1 base address (RM035 §17)
-- [ ] `CR`: EN1, BOFF1, TEN1 (trigger enable), TSEL1 (trigger source)
-- [ ] `DHR12R1`: 12-bit right-aligned data holding register
-- [ ] `DOR1`: output register (read-only, shows current DAC output)
-- [ ] Generating a sine wave: pre-computed LUT in flash, DMA feeds DAC, TIM6 triggers
-- [ ] Timer trigger source selection for DAC
+- DAC1 base address (RM035 §17)
+- `CR`: EN1, BOFF1, TEN1 (trigger enable), TSEL1 (trigger source)
+- `DHR12R1`: 12-bit right-aligned data holding register
+- `DOR1`: output register (read-only, shows current DAC output)
+- Generating a sine wave: pre-computed LUT in flash, DMA feeds DAC, TIM6 triggers
+- Timer trigger source selection for DAC
 - **Verify:** Observe sine wave on PA4 with oscilloscope or DMM (should read ~VDD/2 average for sine)
 
 ### I05 — Advanced Timers (TIM1)
-- [ ] TIM1 base address (RM035 §27) — advanced-control timer differences from TIM2
-- [ ] Input capture: measuring pulse width or frequency of an external signal
-- [ ] `CCMR1` input capture mode, `CCER` polarity, `CCR1` captured value
-- [ ] Output compare with dead-time insertion (complementary outputs)
-- [ ] Encoder interface mode: quadrature decoding from a rotary encoder
+- TIM1 base address (RM035 §27) — advanced-control timer differences from TIM2
+- Input capture: measuring pulse width or frequency of an external signal
+- `CCMR1` input capture mode, `CCER` polarity, `CCR1` captured value
+- Output compare with dead-time insertion (complementary outputs)
+- Encoder interface mode: quadrature decoding from a rotary encoder
 - **Verify:** Measure button press duration with input capture; display milliseconds over UART
 
 ### I06 — Low Power Modes
-- [ ] STM32L476 power domains (RM035 §5)
-- [ ] Sleep mode: `__WFI()` (Wait For Interrupt) — CPU stops, peripherals run
-- [ ] Stop 2 mode: lowest power with SRAM retention, RTC still runs
-- [ ] Standby mode: full shutdown, only backup domain alive, wakeup = reset
-- [ ] Wakeup sources: EXTI line, RTC alarm, IWDG
-- [ ] `PWR_CR1/CR2`: mode selection bits
-- [ ] Current measurement: how to measure µA draw with a multimeter in current mode
+- STM32L476 power domains (RM035 §5)
+- Sleep mode: `__WFI()` (Wait For Interrupt) — CPU stops, peripherals run
+- Stop 2 mode: lowest power with SRAM retention, RTC still runs
+- Standby mode: full shutdown, only backup domain alive, wakeup = reset
+- Wakeup sources: EXTI line, RTC alarm, IWDG
+- `PWR_CR1/CR2`: mode selection bits
+- Current measurement: how to measure µA draw with a multimeter in current mode
 - **Verify:** Enter Stop 2; wake with button press; confirm UART resumes printing (measure current difference)
 
 ---
@@ -361,58 +393,58 @@ Break projects (`BP-NN`) slot in after each tier. Device is provided by you; we 
 > CMSIS headers introduced here as a comparison to `stm32l476.h` you built. Focus shifts from peripheral drivers to firmware system architecture.
 
 ### X01 — Watchdog Timers
-- [ ] IWDG (Independent Watchdog): `KR`, `PR`, `RLR` registers (RM035 §32)
-- [ ] IWDG clock: LSI ~32 kHz (independent of main clock — survives Stop mode)
-- [ ] WWDG (Window Watchdog): must refresh within a window, not too early or too late
-- [ ] Failure-safe patterns: where to pet the dog, what not to do in the refresh path
-- [ ] Using watchdog as a hang detector in a bare metal loop
+- IWDG (Independent Watchdog): `KR`, `PR`, `RLR` registers (RM035 §32)
+- IWDG clock: LSI ~32 kHz (independent of main clock — survives Stop mode)
+- WWDG (Window Watchdog): must refresh within a window, not too early or too late
+- Failure-safe patterns: where to pet the dog, what not to do in the refresh path
+- Using watchdog as a hang detector in a bare metal loop
 - **Verify:** Intentionally omit the refresh; confirm IWDG resets the MCU within the expected timeout
 
 ### X02 — Internal Flash Programming
-- [ ] Flash memory map: pages, banks, erase granularity (RM035 §3)
-- [ ] Flash unlock sequence: write `KEY1` then `KEY2` to `FLASH_KEYR`
-- [ ] `FLASH_CR`: PG (program), PER (page erase), MER1/2 (mass erase), STRT
-- [ ] `FLASH_SR`: BSY, EOP, error flags
-- [ ] Double-word (64-bit) write requirement on L476
-- [ ] Storing persistent config in the last flash page; reading it back after reset
+- Flash memory map: pages, banks, erase granularity (RM035 §3)
+- Flash unlock sequence: write `KEY1` then `KEY2` to `FLASH_KEYR`
+- `FLASH_CR`: PG (program), PER (page erase), MER1/2 (mass erase), STRT
+- `FLASH_SR`: BSY, EOP, error flags
+- Double-word (64-bit) write requirement on L476
+- Storing persistent config in the last flash page; reading it back after reset
 - **Verify:** Write a value to flash, reset the board, read back the same value over UART
 
 ### X03 — Custom Bootloader
-- [ ] Dual-region flash layout: bootloader at `0x0800 0000`, application at `0x0801 0000`
-- [ ] Application vector table offset: `SCB->VTOR = 0x08010000`
-- [ ] Jumping from bootloader to app: function pointer to app reset handler
-- [ ] **XMODEM protocol, taught directly (no reference-doc page — see teaching-rule exception):** external protocol spec, not covered by RM035/DUI0553/datasheet/UM1724 — packet framing, checksums, and the handshake need direct explanation if XMODEM is the chosen transfer method
-- [ ] UART firmware update: receive new `.bin` via XMODEM or raw bytes, write to app region
-- [ ] Fallback: if app region invalid (first word not a valid stack pointer), stay in bootloader
+- Dual-region flash layout: bootloader at `0x0800 0000`, application at `0x0801 0000`
+- Application vector table offset: `SCB->VTOR = 0x08010000`
+- Jumping from bootloader to app: function pointer to app reset handler
+- **XMODEM protocol, taught directly (no reference-doc page — see teaching-rule exception):** external protocol spec, not covered by RM035/DUI0553/datasheet/UM1724 — packet framing, checksums, and the handshake need direct explanation if XMODEM is the chosen transfer method
+- UART firmware update: receive new `.bin` via XMODEM or raw bytes, write to app region
+- Fallback: if app region invalid (first word not a valid stack pointer), stay in bootloader
 - **Verify:** Flash bootloader; send new app binary over UART; board boots new app without JTAG
 
 ### X04 — USB CDC (Virtual COM Port)
-- [ ] STM32L476 USB FS peripheral (RM035 §44)
-- [ ] **USB spec fundamentals, taught directly (no reference-doc page yet — see teaching-rule exception):** RM035 covers the STM32 USB *peripheral registers* but not the USB protocol spec itself — descriptor formats, endpoint types, and the enumeration state machine come from the USB 2.0/CDC class specifications, which should be sourced and added to the Reference Documents table before this chapter starts
-- [ ] USB descriptor tables: device, configuration, interface, endpoint descriptors
-- [ ] Enumeration sequence: host requests, device responses
-- [ ] Bulk transfer endpoint setup for CDC data class
-- [ ] Replacing UART with USB CDC as the debug console
-- [ ] Introduction to ST vendor headers (CMSIS): compare to our `stm32l476.h`
+- STM32L476 USB FS peripheral (RM035 §44)
+- **USB spec fundamentals, taught directly (no reference-doc page yet — see teaching-rule exception):** RM035 covers the STM32 USB *peripheral registers* but not the USB protocol spec itself — descriptor formats, endpoint types, and the enumeration state machine come from the USB 2.0/CDC class specifications, which should be sourced and added to the Reference Documents table before this chapter starts
+- USB descriptor tables: device, configuration, interface, endpoint descriptors
+- Enumeration sequence: host requests, device responses
+- Bulk transfer endpoint setup for CDC data class
+- Replacing UART with USB CDC as the debug console
+- Introduction to ST vendor headers (CMSIS): compare to our `stm32l476.h`
 - **Verify:** Board appears as `/dev/ttyACMx` on Linux; send/receive data
 
 ### X05 — Bare Metal Cooperative Scheduler
-- [ ] **Round-robin scheduling concept, taught directly (no reference-doc page — see teaching-rule exception):** a general CS/firmware-architecture pattern, not hardware-derived — the iterate-check-call loop shape and why cooperative tasks must return promptly need a worked example first
-- [ ] Task struct: function pointer, period, last-run tick
-- [ ] Round-robin scheduler loop: iterate tasks, check if period elapsed, call if due
-- [ ] Cooperative yield: tasks must return promptly; no blocking inside tasks
-- [ ] Scheduling LED blink, UART print, and ADC read as separate tasks
-- [ ] Limitations vs preemptive RTOS: what breaks, when you need a real RTOS
+- **Round-robin scheduling concept, taught directly (no reference-doc page — see teaching-rule exception):** a general CS/firmware-architecture pattern, not hardware-derived — the iterate-check-call loop shape and why cooperative tasks must return promptly need a worked example first
+- Task struct: function pointer, period, last-run tick
+- Round-robin scheduler loop: iterate tasks, check if period elapsed, call if due
+- Cooperative yield: tasks must return promptly; no blocking inside tasks
+- Scheduling LED blink, UART print, and ADC read as separate tasks
+- Limitations vs preemptive RTOS: what breaks, when you need a real RTOS
 - **Verify:** Three tasks run concurrently at different rates; verify timing with GPIO toggles on scope
 
 ### X06 — FreeRTOS on Bare Metal
-- [ ] **FreeRTOS fundamentals, taught directly (no reference-doc page yet — see teaching-rule exception):** FreeRTOS is a third-party RTOS API, not covered by RM035/DUI0553/datasheet/UM1724 — FreeRTOS's own documentation should be sourced and added to the Reference Documents table before this chapter starts
-- [ ] FreeRTOS port for Cortex-M4: `port.c`, `portmacro.h`
-- [ ] Integrating FreeRTOS source into our CMake project (no CubeMX)
-- [ ] Tasks: `xTaskCreate`, task function signature, priorities
-- [ ] Queues: `xQueueCreate`, `xQueueSend`, `xQueueReceive` for ISR→task comms
-- [ ] Semaphores: binary semaphore for ISR notification
-- [ ] Comparison to X05 scheduler: what FreeRTOS adds (preemption, stack isolation)
+- **FreeRTOS fundamentals, taught directly (no reference-doc page yet — see teaching-rule exception):** FreeRTOS is a third-party RTOS API, not covered by RM035/DUI0553/datasheet/UM1724 — FreeRTOS's own documentation should be sourced and added to the Reference Documents table before this chapter starts
+- FreeRTOS port for Cortex-M4: `port.c`, `portmacro.h`
+- Integrating FreeRTOS source into our CMake project (no CubeMX)
+- Tasks: `xTaskCreate`, task function signature, priorities
+- Queues: `xQueueCreate`, `xQueueSend`, `xQueueReceive` for ISR→task comms
+- Semaphores: binary semaphore for ISR notification
+- Comparison to X05 scheduler: what FreeRTOS adds (preemption, stack isolation)
 - **Verify:** Two FreeRTOS tasks blink LEDs at independent rates; ISR posts to queue; task processes event
 
 ---
@@ -433,52 +465,3 @@ Break projects are not pre-planned. When you have a device, we follow this seque
 6. **Document** — add a `README.md` to the project folder describing the device, wiring, and what you learned
 
 Break project folder: `boards/NUCLEO-L476RG/projects/break-projects/bpNN-device-name/`
-
----
-
-## Progress Tracking
-
-Mark chapters complete by checking off the checklist items above, then updating this table:
-
-| Chapter | Status | Date Completed | Notes |
-|---------|--------|---------------|-------|
-| F01 | ✅ Complete | 2026-06-25 | |
-| F02 | ✅ Complete | 2026-06-26 | |
-| F03 | ✅ Complete | 2026-06-26 | |
-| F04 | ✅ Complete | 2026-07-03 | |
-| F05 | ✅ Complete | 2026-07-10 | |
-| F06 | 🔶 Partial | 2026-07-10 | Concepts covered; reg_write/reg_read exercise skipped |
-| F07 | 🔶 Partial | 2026-07-11 | Object-like #define + parens pitfall covered; function-like macros (SET_BIT etc.) and exercise skipped |
-| F08 | ✅ Complete | 2026-07-11 | Chip marking decode, package types, module silkscreen decode, resistor/cap EIA codes (self-reported), comm-interface pin ID all covered; exercise done on real GC9A01 module (SPI, 7 pins, no BLK) |
-| F09 | ✅ Complete | 2026-07-11 | Datasheet found (GC9A01A, Galaxycore) and saved to bp01 project folder; located timing + command sections |
-| BP-01 | ⏸ Paused | 2026-07-11 | Device: GC9A01 display. Datasheet found and saved; paused before wiring/driver work — overwhelmed by hardware terminology, resuming after Entry tier |
-| E01 | ⬜ Not started | — | Entry tier restructured + reset 2026-07-24 (curriculum audit): new chapter, ELF/binary format fundamentals, inserted ahead of toolchain setup |
-| E02 | ⬜ Not started | — | Was old E01 (Toolchain & CMake Setup); progress reset 2026-07-24 as part of Entry tier restructure |
-| E03 | ⬜ Not started | — | Was old E02 (How to Read the Reference Manual); progress reset 2026-07-24 as part of Entry tier restructure |
-| E04 | ⬜ Not started | — | Was old E03 (Memory Map from Scratch); progress reset 2026-07-24 as part of Entry tier restructure |
-| E05 | ⬜ Not started | — | Was old E04 (Startup Code & Linker Script); progress reset 2026-07-24 as part of Entry tier restructure |
-| E06 | ⬜ Not started | — | Was old E05 (RCC Clock System) |
-| E07 | ⬜ Not started | — | Was old E06 (GPIO from the Register Map) |
-| E08 | ⬜ Not started | — | Was old E07 (UART Polling) |
-| BP-02 | ⬜ Not started | — | Device: TBD |
-| N01 | ⬜ Not started | — | |
-| N02 | ⬜ Not started | — | |
-| N03 | ⬜ Not started | — | |
-| N04 | ⬜ Not started | — | |
-| N05 | ⬜ Not started | — | |
-| N06 | ⬜ Not started | — | |
-| BP-03 | ⬜ Not started | — | Device: TBD |
-| I01 | ⬜ Not started | — | |
-| I02 | ⬜ Not started | — | |
-| I03 | ⬜ Not started | — | |
-| I04 | ⬜ Not started | — | |
-| I05 | ⬜ Not started | — | |
-| I06 | ⬜ Not started | — | |
-| BP-04 | ⬜ Not started | — | Device: TBD |
-| X01 | ⬜ Not started | — | |
-| X02 | ⬜ Not started | — | |
-| X03 | ⬜ Not started | — | |
-| X04 | ⬜ Not started | — | |
-| X05 | ⬜ Not started | — | |
-| X06 | ⬜ Not started | — | |
-| BP-05 | ⬜ Not started | — | Device: TBD |
